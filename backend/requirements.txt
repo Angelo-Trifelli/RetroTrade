@@ -1,0 +1,6 @@
+Flask
+flask-cors
+Flask-SQLAlchemy
+cloud-sql-python-connector[pymysql]
+python-dotenv
+firebase-admin

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "404481366093",
+    "project_id": "retrotrade-d2e6c",
+    "storage_bucket": "retrotrade-d2e6c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:404481366093:android:6228f8a873014ae20d6404",
+        "android_client_info": {
+          "package_name": "com.example.retrotrade"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDH9D8LVaCeEvzal1Y-ihVeu7H2KKdZAgc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

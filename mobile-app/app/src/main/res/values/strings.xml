@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">RetroTrade</string>
+    <string name="backendURL">http://AngeloTrifelli.pythonanywhere.com</string>
+    <string name="localBackendURL">http://localhost:8080/</string>
 </resources>
