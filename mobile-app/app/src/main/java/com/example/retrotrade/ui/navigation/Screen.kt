@@ -4,8 +4,16 @@ sealed class Screen(val route: String) {
 
     // Graphs
     data object AuthGraph : Screen("auth_graph")
+    data object HomeGraph : Screen("home_graph")
 
     // Auth screens
     data object Login : Screen("login")
     data object Register : Screen("register")
+
+    // Home tabs
+    data object Home : Screen("home")
+    data object Collection : Screen("collection")
+    data object Scan : Screen("scan")
+    data object Trades : Screen("trades")
+    data object Profile : Screen("profile")
 }

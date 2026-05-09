@@ -4,6 +4,8 @@ import com.example.retrotrade.rest.api.ApiClient
 import com.example.retrotrade.rest.api.AuthService
 import com.example.retrotrade.rest.model.request.CreateUserRequest
 import com.example.retrotrade.rest.model.response.CreateUserResponse
+import com.example.retrotrade.rest.model.response.LoadUserDataResponse
+import com.example.retrotrade.rest.parser.ErrorParser
 
 class UserRepository(
     private val authService: AuthService = ApiClient.authService
@@ -51,6 +53,23 @@ class UserRepository(
             if (!response.isSuccessful) {
                 return Result.failure(
                     Exception("Error:  ${response.body()?.error}")
+                )
+            }
+
+            val body = response.body() ?: return Result.failure(Exception("Empty response"))
+            Result.success(body)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getCurrentUser(): Result<LoadUserDataResponse> {
+        return try {
+            val response = authService.loadLoggedUserData()
+
+            if (!response.isSuccessful) {
+                return Result.failure(
+                    Exception(ErrorParser.parseError(response.errorBody()) ?: "Unknown error")
                 )
             }
 

@@ -1,7 +1,5 @@
 package com.example.retrotrade.ui.screens.authentication
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -15,18 +13,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SwapHorizontalCircle
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -38,7 +33,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -55,12 +49,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.retrotrade.firebaseAuth
+import com.example.retrotrade.ui.components.AppErrorDialog
 import com.example.retrotrade.ui.navigation.authentication.RegisterUiState
 import com.example.retrotrade.ui.navigation.authentication.RegisterViewModel
 
@@ -354,61 +347,15 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(32.dp))
         }
 
-        // Error Dialog
+
         if (showErrorDialog) {
-            AlertDialog(
-                onDismissRequest = {
+            AppErrorDialog(
+                title = "Registration Error",
+                message = errorMessage,
+                onDismiss = {
                     showErrorDialog = false
                     viewModel.resetState()
-                },
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.ErrorOutline,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(36.dp)
-                    )
-                },
-                title = {
-                    Text(
-                        text = "Registration Error",
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                text = {
-                    Text(
-                        text = errorMessage,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            showErrorDialog = false
-                            viewModel.resetState()
-                        }
-                    ) {
-                        Text(
-                            "OK",
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                },
-                containerColor = Color.White,
-                tonalElevation = 6.dp,
-                shape = MaterialTheme.shapes.large,
-                modifier = Modifier.border(
-                    width = 1.5.dp,
-                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
-                    shape = MaterialTheme.shapes.large
-                )
+                }
             )
         }
     }

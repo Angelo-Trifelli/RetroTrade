@@ -49,6 +49,23 @@ def create_user():
     return ResponseBuilder.create_response(" ", 201, False)
 
 
-@bp.route('/Authentication/login', methods=['POST'])
-def login():
-    return 'ok'
+@bp.route('/loadLoggedUserData', methods=['GET'])
+@firebase_required
+def load_logged_user_data():
+    firebase_uid = g.firebase_user['uid']
+
+    if firebase_uid is None:
+        return ResponseBuilder.create_response("Missing firebase UID!", 400, True)
+
+    logged_user = User.query.filter_by(id=firebase_uid).first()
+
+    if not logged_user:
+        return ResponseBuilder.create_response("User not found", 400, True)
+
+    response = {
+        "fullName": logged_user.fullName,
+        "username": logged_user.username,
+        "email": logged_user.email
+    }
+
+    return ResponseBuilder.create_response(response, 200, False)
