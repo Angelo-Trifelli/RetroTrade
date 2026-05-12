@@ -1,6 +1,7 @@
 package com.example.retrotrade.ui.navigation.authentication
 
 import androidx.lifecycle.viewModelScope
+import com.example.retrotrade.data.UserSession
 import com.example.retrotrade.firebaseAuth
 import com.example.retrotrade.repository.UserRepository
 import com.example.retrotrade.ui.navigation.BaseViewModel
@@ -52,6 +53,7 @@ class LoginViewModel : BaseViewModel() {
                 if (result.isFailure) {
                     _uiState.value = GenericUiState.Error(result.exceptionOrNull()?.message ?: "Failed to load user data")
                 } else {
+                    UserSession.set(result.getOrThrow())
                     _uiState.value = GenericUiState.Success
                 }
             } catch (e: Exception) {

@@ -63,6 +63,7 @@ def load_logged_user_data():
         return ResponseBuilder.create_response("User not found", 400, True)
 
     response = {
+        "id": firebase_uid,
         "fullName": logged_user.fullName,
         "username": logged_user.username,
         "email": logged_user.email

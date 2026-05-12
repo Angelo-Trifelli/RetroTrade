@@ -1,6 +1,6 @@
-package com.example.retrotrade.rest.model.response
+package com.example.retrotrade.model
 
-data class LoadUserDataResponse(
+data class User(
     val id: String? = null,
     val fullName: String? = null,
     val username: String? = null,

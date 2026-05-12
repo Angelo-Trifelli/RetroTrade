@@ -1,4 +1,4 @@
-package com.example.retrotrade.ui.components
+package com.example.retrotrade.ui.components.common
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.fillMaxWidth

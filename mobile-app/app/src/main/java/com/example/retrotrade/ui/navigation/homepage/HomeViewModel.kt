@@ -1,80 +1,81 @@
 package com.example.retrotrade.ui.navigation.homepage
 
-import com.example.retrotrade.firebaseAuth
+import androidx.lifecycle.viewModelScope
+import com.example.retrotrade.data.UserSession
+import com.example.retrotrade.repository.HomeRepository
 import com.example.retrotrade.ui.navigation.BaseViewModel
+import com.example.retrotrade.ui.navigation.GenericUiState
 import com.example.retrotrade.ui.navigation.Screen
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-
-data class CollectionItem(
-    val name: String,
-    val category: String,
-    val estimatedValue: String,
-    val iconChar: String
-)
-
-data class TrendingItem(
-    val name: String,
-    val category: String,
-    val estimatedValue: String,
-    val ownerName: String,
-    val distance: String,
-    val iconChar: String
-)
-
-data class HomeUiState(
-    val username: String = "Collector",
-    val collectionCount: Int = 0,
-    val pendingTradesCount: Int = 0,
-    val totalEstimatedValue: String = "$0",
-    val recentItems: List<CollectionItem> = emptyList(),
-    val trendingItems: List<TrendingItem> = emptyList()
-)
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class HomeViewModel : BaseViewModel() {
 
+    private val homeRepository = HomeRepository()
+
     private val _uiState = MutableStateFlow(HomeUiState())
-    val uiState: StateFlow<HomeUiState> = _uiState
+    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    //Separate loading/error state so the UI can react without inspecting every field of HomeUiState
+    private val _dataState = MutableStateFlow<GenericUiState>(GenericUiState.Idle)
+    val dataState: StateFlow<GenericUiState> = _dataState.asStateFlow()
 
     init {
         loadHomeData()
     }
 
+    fun onTabSelected(index: Int, label: String) {
+
+    }
+
     private fun loadHomeData() {
-        val displayName = firebaseAuth.currentUser?.displayName
-        val username = if (!displayName.isNullOrBlank()) displayName else "Collector"
+        viewModelScope.launch(Dispatchers.IO) {
+            _dataState.value = GenericUiState.Loading
 
-        val recentItems = listOf(
-            CollectionItem("Charizard Holo", "Trading Cards", "$285.00", "🔥"),
-            CollectionItem("Game Boy Color", "Retro Games", "$120.00", "🎮"),
-            CollectionItem("Levi's 501 '89", "Vintage Clothing", "$95.00", "👖"),
-            CollectionItem("N64 Controller", "Retro Games", "$45.00", "🕹️"),
-            CollectionItem("Pikachu 1st Ed.", "Trading Cards", "$210.00", "⚡")
-        )
+            val username = UserSession.currentUser
+                ?.username
+                ?.takeIf { it.isNotBlank() }
+                ?: "Collector"
 
-        val trendingItems = listOf(
-            TrendingItem(
-                "Super Nintendo Console", "Retro Games",
-                "$175.00", "RetroMike", "2.4 km", "🎮"
-            ),
-            TrendingItem(
-                "Blastoise Holo", "Trading Cards",
-                "$195.00", "CardTrader99", "1.1 km", "💧"
-            ),
-            TrendingItem(
-                "Vintage Nike Windbreaker", "Vintage Clothing",
-                "$88.00", "ThriftQueen", "3.7 km", "🧥"
-            )
-        )
+            try {
+                val statsDefer = async(Dispatchers.IO) { homeRepository.getStats() }
+                val recentItemsDefer = async(Dispatchers.IO) { homeRepository.getRecentItems() }
+                val trendingItemsDefer = async(Dispatchers.IO) { homeRepository.getTrendingItems() }
 
-        _uiState.value = HomeUiState(
-            username = username,
-            collectionCount = 24,
-            pendingTradesCount = 3,
-            totalEstimatedValue = "$1,847",
-            recentItems = recentItems,
-            trendingItems = trendingItems
-        )
+                val userStatsResponse = statsDefer.await().getOrThrow()
+                val recentItems = recentItemsDefer.await().getOrThrow()
+                val trendingItems = trendingItemsDefer.await()
+
+                _uiState.update {
+                    it.copy(
+                        username = username,
+                        collectionCount = userStatsResponse.totalItems,
+                        pendingTradesCount = userStatsResponse.pendingTrades,
+                        recentItems = recentItems,
+                        trendingItems = trendingItems
+                    )
+                }
+
+                _dataState.value = GenericUiState.Success
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        username = username,
+                        collectionCount = 0,
+                        pendingTradesCount = 0,
+                        recentItems = emptyList(),
+                        trendingItems = emptyList()
+                    )
+                }
+
+                _dataState.value = GenericUiState.Error(e.message ?: "Failed to load home data")
+            }
+        }
     }
 
     fun onScanClicked() {
@@ -91,5 +92,9 @@ class HomeViewModel : BaseViewModel() {
 
     fun onChatClicked() {
         // Will navigate to chat when implemented
+    }
+
+    fun resetDataState() {
+        _dataState.value = GenericUiState.Idle
     }
 }

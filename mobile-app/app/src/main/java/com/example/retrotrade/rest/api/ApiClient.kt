@@ -31,4 +31,13 @@ object ApiClient {
             .build()
             .create(AuthService::class.java)
     }
+
+    val userService: UserService by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL + "users/")
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(UserService::class.java)
+    }
 }

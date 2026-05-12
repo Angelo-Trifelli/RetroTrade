@@ -8,6 +8,7 @@ class Item(db.Model):
     name = db.Column(db.String(255), nullable=False)
     category = db.Column(db.String(255), nullable=False)
     estimated_value = db.Column(db.Numeric(10, 2), nullable=False)
+    icon_char = db.Column(db.String(50), nullable=True)
     
     seller_id = db.Column(
         db.String(255),

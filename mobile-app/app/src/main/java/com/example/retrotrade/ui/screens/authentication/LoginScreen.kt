@@ -54,10 +54,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.retrotrade.R
-import com.example.retrotrade.ui.components.AppErrorDialog
+import com.example.retrotrade.ui.components.common.AppErrorDialog
 import com.example.retrotrade.ui.navigation.GenericUiState
 import com.example.retrotrade.ui.navigation.authentication.LoginViewModel
-import com.example.retrotrade.ui.navigation.authentication.RegisterUiState
 import com.example.retrotrade.ui.theme.RetroIcon
 
 @Preview(showBackground = true)
