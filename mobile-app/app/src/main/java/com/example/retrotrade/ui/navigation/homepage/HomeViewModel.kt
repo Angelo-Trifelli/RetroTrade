@@ -3,6 +3,7 @@ package com.example.retrotrade.ui.navigation.homepage
 import androidx.lifecycle.viewModelScope
 import com.example.retrotrade.data.UserSession
 import com.example.retrotrade.repository.HomeRepository
+import com.example.retrotrade.repository.UserRepository
 import com.example.retrotrade.ui.navigation.BaseViewModel
 import com.example.retrotrade.ui.navigation.GenericUiState
 import com.example.retrotrade.ui.navigation.Screen
@@ -17,6 +18,7 @@ import kotlinx.coroutines.launch
 class HomeViewModel : BaseViewModel() {
 
     private val homeRepository = HomeRepository()
+    private val userRepository = UserRepository()
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -29,10 +31,6 @@ class HomeViewModel : BaseViewModel() {
         loadHomeData()
     }
 
-    fun onTabSelected(index: Int, label: String) {
-
-    }
-
     private fun loadHomeData() {
         viewModelScope.launch(Dispatchers.IO) {
             _dataState.value = GenericUiState.Loading
@@ -43,7 +41,7 @@ class HomeViewModel : BaseViewModel() {
                 ?: "Collector"
 
             try {
-                val statsDefer = async(Dispatchers.IO) { homeRepository.getStats() }
+                val statsDefer = async(Dispatchers.IO) { userRepository.getStats() }
                 val recentItemsDefer = async(Dispatchers.IO) { homeRepository.getRecentItems() }
                 val trendingItemsDefer = async(Dispatchers.IO) { homeRepository.getTrendingItems() }
 
@@ -54,7 +52,7 @@ class HomeViewModel : BaseViewModel() {
                 _uiState.update {
                     it.copy(
                         username = username,
-                        collectionCount = userStatsResponse.totalItems,
+                        collectionCount = userStatsResponse.activeItems,
                         pendingTradesCount = userStatsResponse.pendingTrades,
                         recentItems = recentItems,
                         trendingItems = trendingItems
@@ -76,22 +74,6 @@ class HomeViewModel : BaseViewModel() {
                 _dataState.value = GenericUiState.Error(e.message ?: "Failed to load home data")
             }
         }
-    }
-
-    fun onScanClicked() {
-        navigate(Screen.Scan.route)
-    }
-
-    fun onCollectionClicked() {
-        navigate(Screen.Collection.route)
-    }
-
-    fun onTradesClicked() {
-        navigate(Screen.Trades.route)
-    }
-
-    fun onChatClicked() {
-        // Will navigate to chat when implemented
     }
 
     fun resetDataState() {

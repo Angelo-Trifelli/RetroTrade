@@ -38,7 +38,7 @@ class LoginViewModel : BaseViewModel() {
     }
 
     fun onLoginCompleted() {
-        navigate(Screen.Home.route)
+        navigate(Screen.MainGraph.route)
     }
 
     fun resetState() {

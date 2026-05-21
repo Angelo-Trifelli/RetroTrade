@@ -5,6 +5,8 @@ USE retrotrade;
 
 CREATE TABLE user (
   id               VARCHAR(255) PRIMARY KEY,
+  registered_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+  fullName         VARCHAR(255) NOT NULL,
   username         VARCHAR(255) NOT NULL UNIQUE,
   email    		   VARCHAR(255) NOT NULL UNIQUE
 );
@@ -15,6 +17,7 @@ CREATE TABLE item (
     category  VARCHAR(255) NOT NULL,
     estimated_value DECIMAL(10,2) NOT NULL,
     icon_char VARCHAR(50) DEFAULT NULL,
+    status    VARCHAR(50) NOT NULL DEFAULT "ACTIVE",
 
     seller_id VARCHAR(255) NOT NULL,
 

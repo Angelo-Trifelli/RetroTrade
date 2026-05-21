@@ -6,7 +6,7 @@ from config.database_connection import db
 from entities import Item, ItemView, Trade
 
 from flask import Blueprint, request, g
-from sqlalchemy import func
+from sqlalchemy import func, or_
 
 bp = Blueprint('UserPublisher', __name__, url_prefix="/users")
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -20,24 +20,53 @@ def get_user_stats(id):
     if firebase_uid != id:
         return ResponseBuilder.create_response("Unauthorized", 403, True)
     
-    trade_count = (
+    pending_trades_count = (
         db.session.query(func.count(Trade.id))
         .filter(
             Trade.receiver_id == firebase_uid,
-            Trade.status.in_(["PENDING", "ACCEPTED"])
+            Trade.status == "PENDING"
         )
         .scalar()
     )
 
-    item_count = (
+    active_items_count = (
         db.session.query(func.count(Item.id))
         .filter(
-            Item.seller_id == firebase_uid
+            Item.seller_id == firebase_uid,
+            Item.status == "ACTIVE"
         )
         .scalar()
     )
 
-    return ResponseBuilder.create_response({"totalItems": item_count, "pendingTrades": trade_count}, 200, False)
+    sold_items_count = (
+        db.session.query(func.count(Item.id))
+        .filter(
+            Item.seller_id == firebase_uid,
+            Item.status == "SOLD"
+        )
+        .scalar()
+    )
+
+    completed_trades_count = (
+        db.session.query(func.count(Trade.id))
+        .filter(
+            or_(
+                Trade.receiver_id == firebase_uid,
+                Trade.requester_id == firebase_uid
+            ),
+            Trade.status == 'ACCEPTED'
+        )
+        .scalar()
+    )
+
+    response = {
+        "activeItems": active_items_count,
+        "pendingTrades": pending_trades_count,
+        "soldItems": sold_items_count,
+        "completedTrades": completed_trades_count
+    }
+
+    return ResponseBuilder.create_response(response, 200, False)
 
 
 @bp.route('/<id>/history/recentItems', methods=['GET'])

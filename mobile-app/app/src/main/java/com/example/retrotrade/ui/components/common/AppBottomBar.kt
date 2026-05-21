@@ -35,18 +35,21 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.retrotrade.ui.navigation.Screen
 import com.example.retrotrade.ui.theme.RetroIcon
 import com.example.retrotrade.ui.theme.RetroOrange
 
 @Composable
 @Preview(showBackground = true)
 fun AppBottomBar(
-    selectedTab: Int = 0,
-    onTabSelected: (Int, String) -> Unit = { _, _ -> }
+    navController: NavHostController = NavHostController(LocalContext.current)
 ) {
 
     NavigationBar(
@@ -59,9 +62,11 @@ fun AppBottomBar(
             )
             .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
     ) {
+        val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+
         bottomNavTabs.forEachIndexed { index, tab ->
-            val isSelected = selectedTab == index
-            val isScanTab = index == SCAN_TAB_INDEX
+            val isSelected = currentRoute == tab.screen.route
+            val isScanTab = tab.screen.route == Screen.Scan.route
 
             val animatedScale by animateFloatAsState(
                 targetValue   = if (isSelected) 1.15f else 1f,
@@ -76,7 +81,16 @@ fun AppBottomBar(
 
             NavigationBarItem(
                 selected = isSelected,
-                onClick = { onTabSelected(index, tab.label) },
+                onClick = {
+                    navController.navigate(tab.screen.route) {
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
 
                 icon = {
                     if (isScanTab) {
@@ -137,18 +151,17 @@ fun AppBottomBar(
 
 private data class BottomNavTab(
     val label: String,
+    val screen : Screen,
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector
 )
 
-private const val SCAN_TAB_INDEX = 2
-
 private val bottomNavTabs = listOf(
-    BottomNavTab("Home", Icons.Filled.Home, Icons.Outlined.Home),
-    BottomNavTab("Collection", Icons.Filled.GridView, Icons.Outlined.GridView),
-    BottomNavTab("Scan", Icons.Filled.CameraAlt, Icons.Outlined.CameraAlt),
-    BottomNavTab("Trades", Icons.Filled.SwapHoriz, Icons.Outlined.SwapHoriz),
-    BottomNavTab("Profile", Icons.Filled.Person, Icons.Outlined.Person)
+    BottomNavTab("Home", Screen.Home, Icons.Filled.Home, Icons.Outlined.Home),
+    BottomNavTab("Collection", Screen.Collection,  Icons.Filled.GridView, Icons.Outlined.GridView),
+    BottomNavTab("Scan", Screen.Scan, Icons.Filled.CameraAlt, Icons.Outlined.CameraAlt),
+    BottomNavTab("Trades", Screen.Trades, Icons.Filled.SwapHoriz, Icons.Outlined.SwapHoriz),
+    BottomNavTab("Profile", Screen.Profile, Icons.Filled.Person, Icons.Outlined.Person)
 )
 
 

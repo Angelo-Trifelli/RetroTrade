@@ -64,6 +64,7 @@ def load_logged_user_data():
 
     response = {
         "id": firebase_uid,
+        "registeredAt": logged_user.registered_at,
         "fullName": logged_user.fullName,
         "username": logged_user.username,
         "email": logged_user.email

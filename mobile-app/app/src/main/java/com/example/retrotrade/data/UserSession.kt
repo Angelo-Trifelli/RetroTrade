@@ -10,6 +10,7 @@ object UserSession {
     fun set(currentUserData: LoadUserDataResponse) {
         currentUser = User(
             currentUserData.id,
+            currentUserData.registeredAt,
             currentUserData.fullName,
             currentUserData.username,
             currentUserData.email

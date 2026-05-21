@@ -1,14 +1,18 @@
 package com.example.retrotrade.repository
 
+import com.example.retrotrade.data.UserSession
 import com.example.retrotrade.rest.api.ApiClient
 import com.example.retrotrade.rest.api.AuthService
+import com.example.retrotrade.rest.api.UserService
 import com.example.retrotrade.rest.model.request.CreateUserRequest
 import com.example.retrotrade.rest.model.response.CreateUserResponse
 import com.example.retrotrade.rest.model.response.LoadUserDataResponse
+import com.example.retrotrade.rest.model.response.UserStatsResponse
 import com.example.retrotrade.rest.parser.ErrorParser
 
 class UserRepository(
-    private val authService: AuthService = ApiClient.authService
+    private val authService: AuthService = ApiClient.authService,
+    private val userService: UserService = ApiClient.userService
 ) {
 
     suspend fun isUsernameAvailable(username: String): Result<Boolean> {
@@ -66,6 +70,24 @@ class UserRepository(
     suspend fun getCurrentUser(): Result<LoadUserDataResponse> {
         return try {
             val response = authService.loadLoggedUserData()
+
+            if (!response.isSuccessful) {
+                return Result.failure(
+                    Exception(ErrorParser.parseError(response.errorBody()) ?: "Unknown error")
+                )
+            }
+
+            val body = response.body() ?: return Result.failure(Exception("Empty response"))
+            Result.success(body)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
+    suspend fun getStats(): Result<UserStatsResponse> {
+        return try {
+            val response = userService.loadStats(UserSession.currentUser?.id.toString())
 
             if (!response.isSuccessful) {
                 return Result.failure(

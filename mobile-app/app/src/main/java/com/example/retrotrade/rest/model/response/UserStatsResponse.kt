@@ -1,6 +1,8 @@
 package com.example.retrotrade.rest.model.response
 
 data class UserStatsResponse(
-    val totalItems: Int,
-    val pendingTrades: Int
+    val activeItems: Int,
+    val pendingTrades: Int,
+    val soldItems: Int,
+    val completedTrades: Int
 )

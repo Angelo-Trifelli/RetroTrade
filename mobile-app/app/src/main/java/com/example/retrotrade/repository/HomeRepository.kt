@@ -5,29 +5,11 @@ import com.example.retrotrade.model.RecentItem
 import com.example.retrotrade.model.TrendingItem
 import com.example.retrotrade.rest.api.ApiClient
 import com.example.retrotrade.rest.api.UserService
-import com.example.retrotrade.rest.model.response.UserStatsResponse
 import com.example.retrotrade.rest.parser.ErrorParser
 
 class HomeRepository(
     private val userService: UserService = ApiClient.userService
 ) {
-
-    suspend fun getStats(): Result<UserStatsResponse> {
-        return try {
-            val response = userService.loadStats(UserSession.currentUser?.id.toString())
-
-            if (!response.isSuccessful) {
-                return Result.failure(
-                    Exception(ErrorParser.parseError(response.errorBody()) ?: "Unknown error")
-                )
-            }
-
-            val body = response.body() ?: return Result.failure(Exception("Empty response"))
-            Result.success(body)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
 
     suspend fun getRecentItems(): Result<List<RecentItem>> {
         return try {
