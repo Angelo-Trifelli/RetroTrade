@@ -1,0 +1,15 @@
+package com.example.retrotrade.rest.api
+
+import com.example.retrotrade.rest.model.response.LoadItemsResponse
+import retrofit2.Response
+import retrofit2.http.GET
+import retrofit2.http.Query
+
+interface ItemService {
+
+    @GET("/items")
+    suspend fun loadItems(
+        @Query("userId") userId: String
+    ): Response<List<LoadItemsResponse>>
+
+}

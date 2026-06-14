@@ -35,8 +35,7 @@ fun HomeContent(
     ) {
         // ── Greeting header ─────────────────────────────────
         GreetingHeader(
-            username = uiState.username,
-            onNotificationsClicked = { /* TODO: implement notifications */ }
+            username = uiState.username
         )
 
         Spacer(modifier = Modifier.height(20.dp))

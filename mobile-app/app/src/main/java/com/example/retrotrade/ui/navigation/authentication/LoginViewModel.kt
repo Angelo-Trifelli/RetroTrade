@@ -7,16 +7,45 @@ import com.example.retrotrade.repository.UserRepository
 import com.example.retrotrade.ui.navigation.BaseViewModel
 import com.example.retrotrade.ui.navigation.GenericUiState
 import com.example.retrotrade.ui.navigation.Screen
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class LoginViewModel : BaseViewModel() {
 
     private val userRepository = UserRepository()
+    private var sessionChecked = false
 
     private val _uiState = MutableStateFlow<GenericUiState>(GenericUiState.Idle)
-    val uiState: StateFlow<GenericUiState> = _uiState
+    val uiState: StateFlow<GenericUiState> = _uiState.asStateFlow()
+
+
+    fun checkExistingSession() {
+        if (sessionChecked) return
+
+        sessionChecked = true
+        val currentUser = firebaseAuth.currentUser
+
+        if (currentUser == null) return
+
+        _uiState.value = GenericUiState.Loading
+
+        currentUser.getIdToken(true)
+            .addOnSuccessListener {
+                try {
+                    loadUserData(true)
+                } catch (_: Exception) {
+                    firebaseAuth.signOut()
+                    _uiState.value = GenericUiState.Idle
+                }
+            }
+            .addOnFailureListener {
+                firebaseAuth.signOut()
+                _uiState.value = GenericUiState.Idle
+            }
+    }
 
     fun onRegisterClicked() {
         navigate(Screen.Register.route)
@@ -33,7 +62,7 @@ class LoginViewModel : BaseViewModel() {
                     return@addOnCompleteListener
                 }
 
-                loadUserData()
+                loadUserData(false)
             }
     }
 
@@ -45,13 +74,19 @@ class LoginViewModel : BaseViewModel() {
         _uiState.value = GenericUiState.Idle
     }
 
-    private fun loadUserData() {
+    private fun loadUserData(signOutOnFailure: Boolean) {
         viewModelScope.launch {
             try {
+                delay(2000)
                 val result = userRepository.getCurrentUser()
 
                 if (result.isFailure) {
-                    _uiState.value = GenericUiState.Error(result.exceptionOrNull()?.message ?: "Failed to load user data")
+                    if (signOutOnFailure) {
+                        firebaseAuth.signOut()
+                        _uiState.value = GenericUiState.Idle
+                    } else {
+                        _uiState.value = GenericUiState.Error(result.exceptionOrNull()?.message ?: "Failed to load user data")
+                    }
                 } else {
                     UserSession.set(result.getOrThrow())
                     _uiState.value = GenericUiState.Success

@@ -40,4 +40,13 @@ object ApiClient {
             .build()
             .create(UserService::class.java)
     }
+
+    val itemService: ItemService by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ItemService::class.java)
+    }
 }

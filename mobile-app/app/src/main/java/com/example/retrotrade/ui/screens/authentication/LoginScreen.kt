@@ -67,6 +67,10 @@ fun LoginScreen(
     val focusManager = LocalFocusManager.current
     val uiState by viewModel.uiState.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.checkExistingSession()
+    }
+
     //Form variables
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }

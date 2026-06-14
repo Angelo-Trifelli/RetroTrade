@@ -1,7 +1,7 @@
 import logging
 
 from config import database_connection, firebase_config
-from rest import AuthPublisher, UserPublisher
+from rest import AuthPublisher, UserPublisher, ItemPublisher
 
 from flask import Flask, Blueprint, request
 from flask_cors import CORS
@@ -23,6 +23,7 @@ database_connection.db.init_app(app)
 #Register publisher endpoints
 app.register_blueprint(AuthPublisher.bp)
 app.register_blueprint(UserPublisher.bp)
+app.register_blueprint(ItemPublisher.bp)
 
 
 @app.route("/")
