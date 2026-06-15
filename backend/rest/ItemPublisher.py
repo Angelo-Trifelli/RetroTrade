@@ -1,4 +1,5 @@
 import logging
+import base64
 
 from rest import ResponseBuilder
 from rest.decorator.auth_decorator import firebase_required
@@ -29,3 +30,30 @@ def get_items():
     )
 
     return ResponseBuilder.create_response([item.to_dict() for item in items], 200, False)
+
+
+@bp.route('/items', methods=['POST'])
+@firebase_required
+def create_item():
+    firebase_uid = g.firebase_user['uid']
+    data = request.get_json()
+    
+    if not data:
+        return ResponseBuilder.create_response("Missing data", 400, True)
+    
+    new_item = Item(
+        name = data.get('name'),
+        category = data.get('category'),
+        estimated_value = data.get('estimatedValue'),
+        icon_char = base64.b64encode(data.get('iconChar').encode('utf-8')).decode('ascii'),
+        photo = base64.b64decode(data.get("photo")),
+        status = 'ACTIVE',
+        seller_id = firebase_uid      
+    )
+
+    db.session.add(new_item)
+    db.session.commit()
+
+    return ResponseBuilder.create_response(" ", 201, False)
+
+    

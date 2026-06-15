@@ -1,8 +1,11 @@
 package com.example.retrotrade.rest.api
 
+import com.example.retrotrade.rest.model.request.CreateItemRequest
 import com.example.retrotrade.rest.model.response.LoadItemsResponse
 import retrofit2.Response
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
 import retrofit2.http.Query
 
 interface ItemService {
@@ -11,5 +14,10 @@ interface ItemService {
     suspend fun loadItems(
         @Query("userId") userId: String
     ): Response<List<LoadItemsResponse>>
+
+    @POST("/items")
+    suspend fun createItem(
+        @Body request: CreateItemRequest
+    ): Response<Unit>
 
 }

@@ -1,8 +1,11 @@
 package com.example.retrotrade.repository
 
+import android.graphics.Bitmap
 import com.example.retrotrade.data.UserSession
+import com.example.retrotrade.model.ItemCategory
 import com.example.retrotrade.rest.api.ApiClient
 import com.example.retrotrade.rest.api.ItemService
+import com.example.retrotrade.rest.model.request.CreateItemRequest
 import com.example.retrotrade.rest.model.response.LoadItemsResponse
 import com.example.retrotrade.rest.parser.ErrorParser
 
@@ -22,6 +25,30 @@ class ItemRepository(
 
             val body = response.body() ?: return Result.failure(Exception("Empty response"))
             Result.success(body)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun createItem(photo: String, name: String, category: ItemCategory, estimatedValue: String, iconChar: String): Result<Unit> {
+        return try {
+            val request = CreateItemRequest(
+                photo = photo,
+                name = name,
+                category = category,
+                estimatedValue = estimatedValue,
+                iconChar = iconChar
+            )
+
+            val response = itemService.createItem(request)
+
+            if (!response.isSuccessful) {
+                return Result.failure(
+                    Exception(ErrorParser.parseError(response.errorBody()) ?: "Unknown error")
+                )
+            }
+
+            Result.success(response.body() ?: Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }

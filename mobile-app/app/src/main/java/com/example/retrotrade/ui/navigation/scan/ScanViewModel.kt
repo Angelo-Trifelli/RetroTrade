@@ -1,22 +1,15 @@
 package com.example.retrotrade.ui.navigation.scan
 
 import android.graphics.Bitmap
+import androidx.lifecycle.viewModelScope
+import com.example.retrotrade.model.ItemCategory
+import com.example.retrotrade.repository.ItemRepository
 import com.example.retrotrade.ui.navigation.BaseViewModel
+import com.example.retrotrade.ui.navigation.GenericUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-
-// ─── Item category options ──────────────────────────────────────────
-enum class ItemCategory(val label: String) {
-    TRADING_CARDS("Trading Cards"),
-    RETRO_GAMES("Retro Games"),
-    VINTAGE_CLOTHING("Vintage Clothing"),
-    VINYL_RECORDS("Vinyl Records"),
-    COMICS("Comics"),
-    TOYS("Toys & Figures"),
-    ELECTRONICS("Electronics"),
-    OTHER("Other")
-}
+import kotlinx.coroutines.launch
 
 // ─── Icon char options ──────────────────────────────────────────────
 val availableIconChars = listOf(
@@ -24,31 +17,19 @@ val availableIconChars = listOf(
     "🃏", "🎲", "🧸", "📷", "💎", "🏆", "🎸", "📚"
 )
 
-// ─── UI State ───────────────────────────────────────────────────────
-data class ScanUiState(
-    val capturedPhoto: Bitmap? = null,
-    val itemName: String = "",
-    val selectedCategory: ItemCategory? = null,
-    val estimatedValue: String = "",
-    val selectedIconChar: String? = null,
-    val isCategoryDropdownExpanded: Boolean = false,
-    val isSubmitting: Boolean = false,
-    val showSuccessMessage: Boolean = false,
-    val errorMessage: String? = null
-) {
-    val isFormValid: Boolean
-        get() = capturedPhoto != null &&
-                itemName.isNotBlank() &&
-                selectedCategory != null &&
-                estimatedValue.isNotBlank() &&
-                selectedIconChar != null
-}
-
 class ScanViewModel : BaseViewModel() {
+
+    private val itemRepository = ItemRepository()
 
     private val _uiState = MutableStateFlow(ScanUiState())
     val uiState: StateFlow<ScanUiState> = _uiState.asStateFlow()
 
+    //Separate loading/error state so the UI can react without inspecting every field of ScanUiState
+    private val _dataState = MutableStateFlow<GenericUiState>(GenericUiState.Idle)
+    val dataState: StateFlow<GenericUiState> = _dataState.asStateFlow()
+
+
+    /* --------------------------- PUBLIC API --------------------------- */
     fun onPhotoCaptured(bitmap: Bitmap?) {
         _uiState.value = _uiState.value.copy(capturedPhoto = bitmap)
     }
@@ -59,19 +40,8 @@ class ScanViewModel : BaseViewModel() {
 
     fun onCategorySelected(category: ItemCategory) {
         _uiState.value = _uiState.value.copy(
-            selectedCategory = category,
-            isCategoryDropdownExpanded = false
+            selectedCategory = category
         )
-    }
-
-    fun onCategoryDropdownToggle() {
-        _uiState.value = _uiState.value.copy(
-            isCategoryDropdownExpanded = !_uiState.value.isCategoryDropdownExpanded
-        )
-    }
-
-    fun onCategoryDropdownDismiss() {
-        _uiState.value = _uiState.value.copy(isCategoryDropdownExpanded = false)
     }
 
     fun onEstimatedValueChanged(value: String) {
@@ -87,21 +57,33 @@ class ScanViewModel : BaseViewModel() {
     fun onSubmit() {
         if (!_uiState.value.isFormValid) return
 
-        _uiState.value = _uiState.value.copy(isSubmitting = true)
+        _dataState.value = GenericUiState.Loading
 
-        // TODO: send data to backend via repository
-        // For now, simulate success
-        _uiState.value = _uiState.value.copy(
-            isSubmitting = false,
-            showSuccessMessage = true
-        )
+        viewModelScope.launch {
+            itemRepository.createItem(
+                _uiState.value.base64Photo,
+                _uiState.value.itemName,
+                _uiState.value.selectedCategory!!,
+                _uiState.value.estimatedValue,
+                _uiState.value.selectedIconChar!!
+            ).onSuccess {
+                _dataState.value = GenericUiState.Success
+            }.onFailure {
+                _dataState.value = GenericUiState.Error(it.message ?: "Failed to create item")
+            }
+        }
     }
 
     fun onSuccessDismissed() {
         _uiState.value = ScanUiState()
+        _dataState.value = GenericUiState.Idle
     }
 
     fun onClearPhoto() {
         _uiState.value = _uiState.value.copy(capturedPhoto = null)
+    }
+
+    fun resetDataState() {
+        _dataState.value = GenericUiState.Idle
     }
 }

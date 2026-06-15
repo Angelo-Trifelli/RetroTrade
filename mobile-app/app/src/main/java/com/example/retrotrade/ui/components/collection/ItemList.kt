@@ -92,7 +92,7 @@ private fun CollectionItemCard(item: CollectionListItem) {
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = item.category,
+                            text = item.category.label,
                             fontSize = 12.sp,
                             color = RetroTextSecondary
                         )

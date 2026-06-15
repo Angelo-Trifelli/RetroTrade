@@ -1,6 +1,7 @@
 package com.example.retrotrade.ui.navigation.collection
 
 import com.example.retrotrade.model.CollectionListItem
+import com.example.retrotrade.model.ItemCategory
 import com.example.retrotrade.model.ItemStatus
 import com.example.retrotrade.ui.screens.collection.CollectionFilter
 
@@ -23,7 +24,7 @@ data class CollectionUiState(
             else
                 filtered.filter {
                     it.name.contains(searchQuery, ignoreCase = true) ||
-                    it.category.contains(searchQuery, ignoreCase = true)
+                    it.category.label.contains(searchQuery, ignoreCase = true)
                 }
         }
 }
@@ -35,7 +36,7 @@ private fun initDefaultListItems(): List<CollectionListItem> {
         CollectionListItem(
             id = "1",
             name = "Charizard Holo",
-            category = "Trading Cards",
+            category = ItemCategory.TRADING_CARDS,
             estimatedValue = "$285.00",
             iconChar = "🔥",
             status = ItemStatus.ACTIVE
@@ -43,7 +44,7 @@ private fun initDefaultListItems(): List<CollectionListItem> {
         CollectionListItem(
             id = "2",
             name = "Game Boy Color",
-            category = "Retro Games",
+            category = ItemCategory.RETRO_GAMES,
             estimatedValue = "$120.00",
             iconChar = "🎮",
             status = ItemStatus.ACTIVE
@@ -51,7 +52,7 @@ private fun initDefaultListItems(): List<CollectionListItem> {
         CollectionListItem(
             id = "3",
             name = "Levi's 501 '89",
-            category = "Vintage Clothing",
+            category = ItemCategory.VINTAGE_CLOTHING,
             estimatedValue = "$95.00",
             iconChar = "👖",
             status = ItemStatus.PENDING
@@ -59,7 +60,7 @@ private fun initDefaultListItems(): List<CollectionListItem> {
         CollectionListItem(
             id = "4",
             name = "N64 Controller",
-            category = "Retro Games",
+            category = ItemCategory.RETRO_GAMES,
             estimatedValue = "$45.00",
             iconChar = "🕹️",
             status = ItemStatus.ACTIVE
@@ -67,7 +68,7 @@ private fun initDefaultListItems(): List<CollectionListItem> {
         CollectionListItem(
             id = "5",
             name = "Pikachu 1st Ed.",
-            category = "Trading Cards",
+            category = ItemCategory.TRADING_CARDS,
             estimatedValue = "$210.00",
             iconChar = "⚡",
             status = ItemStatus.SOLD
@@ -75,7 +76,7 @@ private fun initDefaultListItems(): List<CollectionListItem> {
         CollectionListItem(
             id = "6",
             name = "SNES Console",
-            category = "Retro Games",
+            category = ItemCategory.RETRO_GAMES,
             estimatedValue = "$175.00",
             iconChar = "🎮",
             status = ItemStatus.ACTIVE
@@ -83,7 +84,7 @@ private fun initDefaultListItems(): List<CollectionListItem> {
         CollectionListItem(
             id = "7",
             name = "Vintage Nike Windbreaker",
-            category = "Vintage Clothing",
+            category = ItemCategory.VINTAGE_CLOTHING,
             estimatedValue = "$88.00",
             iconChar = "🧥",
             status = ItemStatus.PENDING
