@@ -1,4 +1,4 @@
-package com.example.retrotrade.ui.screens.collection
+package com.example.retrotrade.ui.screens.item
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -6,11 +6,11 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.retrotrade.ui.components.common.AppErrorDialog
 import com.example.retrotrade.ui.navigation.GenericUiState
-import com.example.retrotrade.ui.navigation.collection.CollectionViewModel
+import com.example.retrotrade.ui.navigation.collection.ItemDetailsViewModel
 
 @Composable
-fun CollectionScreen(
-    viewModel: CollectionViewModel = viewModel()
+fun ItemDetailsScreen(
+    viewModel: ItemDetailsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val dataState by viewModel.dataState.collectAsState()
@@ -23,11 +23,9 @@ fun CollectionScreen(
         )
     }
 
-    CollectionContent(
+    ItemDetailsContent(
         uiState = uiState,
         dataState = dataState,
-        onFilterSelected = { viewModel.onFilterSelected(it) },
-        onSearchQueryChanged = { viewModel.onSearchQueryChanged(it) },
-        onItemSelected = { viewModel.onItemSelected(it) }
+        onGoBack = { viewModel.onGoBack() }
     )
 }

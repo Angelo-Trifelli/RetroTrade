@@ -5,6 +5,7 @@ import com.example.retrotrade.model.CollectionListItem
 import com.example.retrotrade.repository.ItemRepository
 import com.example.retrotrade.ui.navigation.BaseViewModel
 import com.example.retrotrade.ui.navigation.GenericUiState
+import com.example.retrotrade.ui.navigation.Screen
 import com.example.retrotrade.ui.screens.collection.CollectionFilter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -37,6 +38,10 @@ class CollectionViewModel : BaseViewModel() {
 
     fun onSearchQueryChanged(query: String) {
         _uiState.value = _uiState.value.copy(searchQuery = query)
+    }
+
+    fun onItemSelected(itemId: String) {
+        navigate(Screen.ItemDetails.createRoute(itemId))
     }
 
     fun resetDataState() {

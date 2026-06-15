@@ -1,10 +1,18 @@
 package com.example.retrotrade.ui.navigation.homepage
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import com.example.retrotrade.ui.navigation.BaseViewModel
+import com.example.retrotrade.ui.navigation.NavEvent
 import com.example.retrotrade.ui.navigation.Screen
+import com.example.retrotrade.ui.navigation.collection.ItemDetailsViewModel
+import com.example.retrotrade.ui.screens.item.ItemDetailsScreen
 import com.example.retrotrade.ui.screens.main.MainScreen
 
 fun NavGraphBuilder.mainNavGraph(
@@ -16,6 +24,38 @@ fun NavGraphBuilder.mainNavGraph(
     ) {
         composable(route = Screen.Home.route) {
             MainScreen(navController)
+        }
+
+        composable(
+            route = Screen.ItemDetails().route,
+            arguments = listOf(
+                navArgument("itemId") {
+                    type = androidx.navigation.NavType.StringType
+                }
+            )
+        ) {
+            val itemDetailsViewModel: ItemDetailsViewModel = viewModel()
+            ObserveNavigation(itemDetailsViewModel, navController)
+            ItemDetailsScreen(itemDetailsViewModel)
+        }
+    }
+}
+
+
+@Composable
+private fun ObserveNavigation(
+    viewModel: BaseViewModel,
+    navController: NavController
+) {
+    LaunchedEffect(Unit) {
+        viewModel.navEvent.collect { event ->
+            when (event) {
+                is NavEvent.Navigate ->
+                    navController.navigate(event.route)
+
+                NavEvent.PopBackStack ->
+                    navController.popBackStack()
+            }
         }
     }
 }

@@ -56,4 +56,18 @@ def create_item():
 
     return ResponseBuilder.create_response(" ", 201, False)
 
+
+@bp.route('/items/<id>', methods=['GET'])
+@firebase_required
+def get_item(id):
+    if id is None:
+        return ResponseBuilder.create_response("Bad Request", 400, True)
+    
+    existing_item = Item.query.filter_by(id=id).first()
+
+    if not existing_item:
+        return ResponseBuilder.create_response("Item not found", 400, True)
+
+    return ResponseBuilder.create_response(existing_item.to_dict(), 200, False)
+
     

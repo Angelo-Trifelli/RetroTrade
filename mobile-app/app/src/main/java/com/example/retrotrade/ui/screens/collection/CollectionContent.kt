@@ -40,7 +40,8 @@ fun CollectionContent(
     uiState: CollectionUiState = CollectionUiState(),
     dataState: GenericUiState = GenericUiState.Idle,
     onFilterSelected: (CollectionFilter) -> Unit = {},
-    onSearchQueryChanged: (String) -> Unit = {}
+    onSearchQueryChanged: (String) -> Unit = {},
+    onItemSelected: (String) -> Unit = {}
 ) {
     Column(
         modifier = modifier
@@ -91,7 +92,10 @@ fun CollectionContent(
             if (uiState.filteredItems.isEmpty()) {
                 EmptyState()
             } else {
-                ItemList(items = uiState.filteredItems)
+                ItemList(
+                    items = uiState.filteredItems,
+                    onItemSelected = { onItemSelected(it.id) }
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))

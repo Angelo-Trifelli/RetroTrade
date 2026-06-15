@@ -1,6 +1,7 @@
 package com.example.retrotrade.ui.components.collection
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,14 +34,15 @@ import com.example.retrotrade.ui.theme.RetroTextSecondary
 
 @Composable
 fun ItemList(
-    items: List<CollectionListItem>
+    items: List<CollectionListItem>,
+    onItemSelected: (CollectionListItem) -> Unit = {}
 ) {
     Column(
         modifier = Modifier.padding(horizontal = 24.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         items.forEach { item ->
-            CollectionItemCard(item)
+            CollectionItemCard(item, onItemSelected)
         }
     }
 }
@@ -48,12 +50,17 @@ fun ItemList(
 
 
 @Composable
-private fun CollectionItemCard(item: CollectionListItem) {
+private fun CollectionItemCard(
+    item: CollectionListItem,
+    onItemSelected: (CollectionListItem) -> Unit
+) {
     Card(
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable{ onItemSelected(item) }
     ) {
         Row(
             modifier = Modifier

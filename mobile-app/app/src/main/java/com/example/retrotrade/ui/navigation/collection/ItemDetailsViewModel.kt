@@ -1,0 +1,93 @@
+package com.example.retrotrade.ui.navigation.collection
+
+import android.graphics.BitmapFactory
+import android.util.Base64
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.viewModelScope
+import com.example.retrotrade.model.CollectionListItem
+import com.example.retrotrade.repository.ItemRepository
+import com.example.retrotrade.ui.navigation.BaseViewModel
+import com.example.retrotrade.ui.navigation.GenericUiState
+import com.example.retrotrade.ui.screens.collection.CollectionFilter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+class ItemDetailsViewModel(
+    savedStateHandle: SavedStateHandle
+) : BaseViewModel() {
+
+    private val itemRepository = ItemRepository()
+
+    private val _uiState = MutableStateFlow(ItemDetailsUiState())
+    val uiState: StateFlow<ItemDetailsUiState> = _uiState.asStateFlow()
+
+    //Separate loading/error state so the UI can react without inspecting every field of ItemDetailsUiState
+    private val _dataState = MutableStateFlow<GenericUiState>(GenericUiState.Loading)
+    val dataState: StateFlow<GenericUiState> = _dataState.asStateFlow()
+
+    /* --------------------------- CONSTRUCTOR --------------------------- */
+    init {
+        val itemId: String? = savedStateHandle.get<String>("itemId")
+        if (itemId != null) {
+            loadItemDetails(itemId)
+        } else {
+            _dataState.value = GenericUiState.Error("Item ID is missing")
+        }
+    }
+
+    /* --------------------------- PUBLIC API --------------------------- */
+    fun onGoBack() {
+        popBackStack()
+    }
+
+    fun resetDataState() {
+        _dataState.value = GenericUiState.Idle
+    }
+
+    /* ----------------------- PRIVATE FUNCTIONS ------------------------ */
+    private fun loadItemDetails(itemId: String) {
+        viewModelScope.launch {
+            _dataState.value = GenericUiState.Loading
+
+            try {
+                val itemDefer = async(Dispatchers.IO) { itemRepository.loadItemDetails(itemId) }
+
+                val itemResponse = itemDefer.await().getOrThrow()
+                val bitmap = decodeBase64ToBitmap(itemResponse.photo)
+
+                _uiState.update {
+                    it.copy(
+                        item = itemResponse,
+                        photoBitmap = bitmap
+                    )
+                }
+
+                _dataState.value = GenericUiState.Success
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        item = null,
+                        photoBitmap = null
+                    )
+                }
+
+                _dataState.value = GenericUiState.Error(e.message ?: "Failed to load item details")
+            }
+        }
+    }
+
+    private fun decodeBase64ToBitmap(base64Str: String?): android.graphics.Bitmap? {
+        if (base64Str.isNullOrEmpty()) return null
+        return try {
+            val decodedBytes = Base64.decode(base64Str, Base64.DEFAULT)
+            BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+        } catch (e: Exception) {
+            null
+        }
+    }
+}

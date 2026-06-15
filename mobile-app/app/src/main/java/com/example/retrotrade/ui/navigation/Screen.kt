@@ -16,4 +16,11 @@ sealed class Screen(val route: String) {
     data object Scan : Screen("scan")
     data object Trades : Screen("trades")
     data object Profile : Screen("profile")
+
+    // Item Details screen
+    data class ItemDetails(val subRoute: String = "item_details/{itemId}") : Screen(subRoute) {
+        companion object {
+            fun createRoute(itemId: String) = "item_details/$itemId"
+        }
+    }
 }
