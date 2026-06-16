@@ -17,6 +17,8 @@ sealed class Screen(val route: String) {
     data object Trades : Screen("trades")
     data object Profile : Screen("profile")
 
+    data object Map : Screen("map")
+
     // Item Details screen
     data class ItemDetails(val subRoute: String = "item_details/{itemId}") : Screen(subRoute) {
         companion object {

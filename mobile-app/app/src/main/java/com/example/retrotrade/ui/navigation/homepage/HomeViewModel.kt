@@ -79,4 +79,8 @@ class HomeViewModel : BaseViewModel() {
     fun resetDataState() {
         _dataState.value = GenericUiState.Idle
     }
+
+    fun onFindTrades() {
+        navigate(Screen.Map.route)
+    }
 }

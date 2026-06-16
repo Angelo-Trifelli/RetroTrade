@@ -12,8 +12,10 @@ import com.example.retrotrade.ui.navigation.BaseViewModel
 import com.example.retrotrade.ui.navigation.NavEvent
 import com.example.retrotrade.ui.navigation.Screen
 import com.example.retrotrade.ui.navigation.collection.ItemDetailsViewModel
+import com.example.retrotrade.ui.navigation.map.MapViewModel
 import com.example.retrotrade.ui.screens.item.ItemDetailsScreen
 import com.example.retrotrade.ui.screens.main.MainScreen
+import com.example.retrotrade.ui.screens.map.MapScreen
 
 fun NavGraphBuilder.mainNavGraph(
     navController: NavController
@@ -37,6 +39,12 @@ fun NavGraphBuilder.mainNavGraph(
             val itemDetailsViewModel: ItemDetailsViewModel = viewModel()
             ObserveNavigation(itemDetailsViewModel, navController)
             ItemDetailsScreen(itemDetailsViewModel)
+        }
+
+        composable(route = Screen.Map.route) {
+            val mapViewModel: MapViewModel = viewModel()
+            ObserveNavigation(mapViewModel, navController)
+            MapScreen(mapViewModel)
         }
     }
 }

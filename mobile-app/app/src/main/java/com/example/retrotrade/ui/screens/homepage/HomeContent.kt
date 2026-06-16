@@ -25,7 +25,8 @@ import com.example.retrotrade.ui.navigation.homepage.HomeUiState
 fun HomeContent(
     modifier: Modifier = Modifier,
     uiState: HomeUiState = HomeUiState(),
-    dataState: GenericUiState = GenericUiState.Idle
+    dataState: GenericUiState = GenericUiState.Idle,
+    onFindTrades: () -> Unit = {}
 ) {
 
     Column(
@@ -41,7 +42,9 @@ fun HomeContent(
         Spacer(modifier = Modifier.height(20.dp))
 
         // ── Quick-action cards ──────────────────────────────
-        QuickActionsRow()
+        QuickActionsRow(
+            onTradesClicked = onFindTrades
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 

@@ -138,7 +138,7 @@ fun ScanContent(
 
             SelectField(
                 placeholder = "Select a category",
-                menuOptions = ItemCategory.entries.toList(),
+                menuOptions = ItemCategory.entries.toList().filter { it != ItemCategory.ALL },
                 selectedOption = uiState.selectedCategory,
                 onOptionSelected = {categorySelected ->
                     if (categorySelected is ItemCategory) {
