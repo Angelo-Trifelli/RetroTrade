@@ -57,24 +57,27 @@ CREATE TABLE trade (
     id INT AUTO_INCREMENT PRIMARY KEY,
     
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(50) NOT NULL DEFAULT 'Pending',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+    offered_price DECIMAL(10,2) NOT NULL,
+    last_message VARCHAR(255) DEFAULT NULL,
 
 	item_id INT NOT NULL,
-    requester_id VARCHAR(255) NOT NULL,
-    receiver_id VARCHAR(255) NOT NULL,
-    
+    buyer_id VARCHAR(255) NOT NULL,
+    seller_id VARCHAR(255) NOT NULL,
+
     CONSTRAINT FK_TRADE_ITEM_ID
         FOREIGN KEY (item_id)
         REFERENCES item(id)
         ON DELETE CASCADE,
 
-    CONSTRAINT FK_TRADE_REQUESTER_ID
-        FOREIGN KEY (requester_id)
+    CONSTRAINT FK_TRADE_BUYER_ID
+        FOREIGN KEY (buyer_id)
         REFERENCES user(id)
         ON DELETE CASCADE,
 
-    CONSTRAINT FK_TRADE_RECEIVER_ID
-        FOREIGN KEY (receiver_id)
+    CONSTRAINT FK_TRADE_SELLER_ID
+        FOREIGN KEY (seller_id)
         REFERENCES user(id)
         ON DELETE CASCADE
 );

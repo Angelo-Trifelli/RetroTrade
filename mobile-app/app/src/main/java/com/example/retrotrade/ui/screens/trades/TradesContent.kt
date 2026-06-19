@@ -16,37 +16,34 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.filled.SwapHorizontalCircle
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.retrotrade.ui.navigation.trades.ActiveTrade
-import com.example.retrotrade.ui.navigation.trades.TradeStatus
-import com.example.retrotrade.ui.navigation.trades.TradeSuggestion
+import com.example.retrotrade.model.Trade
+import com.example.retrotrade.model.TradeStatus
+import com.example.retrotrade.ui.components.common.AppHeader
+import com.example.retrotrade.ui.navigation.GenericUiState
 import com.example.retrotrade.ui.navigation.trades.TradesUiState
 import com.example.retrotrade.ui.theme.BackgroundColor
 import com.example.retrotrade.ui.theme.RetroIcon
@@ -55,64 +52,58 @@ import com.example.retrotrade.ui.theme.RetroTextPrimary
 import com.example.retrotrade.ui.theme.RetroTextSecondary
 
 
-private val tabTitles = listOf("Suggestions", "Active Offers")
+private val tabTitles = listOf("Active Offers", "Completed", "Rejected")
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview(showBackground = true)
 fun TradesContent(
     modifier: Modifier = Modifier,
     uiState: TradesUiState = TradesUiState(),
-    onTabSelected: (Int) -> Unit = {}
+    dataState: GenericUiState = GenericUiState.Idle,
+    onTabSelected: (Int) -> Unit = {},
+    onRefresh: () -> Unit = {}
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+    val isRefreshing = dataState is GenericUiState.Loading
+
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
+        modifier = modifier.fillMaxSize()
     ) {
-        // ── Header ──────────────────────────────────────────
-        TradesHeader()
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
+            // ── Header ──────────────────────────────────────────
+            AppHeader(
+                title = "Trade Center",
+                subtitle = "Manage your trades",
+                icon = Icons.Default.Person
+            )
 
-        Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-        // ── Tab selector ────────────────────────────────────
-        TradesTabRow(
-            selectedIndex = uiState.selectedTabIndex,
-            onTabSelected = onTabSelected
-        )
+            // ── Tab selector ────────────────────────────────────
+            TradesTabRow(
+                selectedIndex = uiState.selectedTabIndex,
+                onTabSelected = onTabSelected
+            )
 
-        Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-        // ── Content based on selected tab ───────────────────
-        when (uiState.selectedTabIndex) {
-            0 -> SuggestionsTab(suggestions = uiState.suggestions)
-            1 -> ActiveTradesTab(trades = uiState.activeTrades)
+            // ── Trades list ──────────────────────────────────────
+            if (uiState.filteredTrades.isEmpty()) {
+                EmptyState()
+            } else {
+                TradeList(
+                    trades = uiState.filteredTrades
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-    }
-}
-
-
-// ─── Header ─────────────────────────────────────────────────────────
-@Composable
-private fun TradesHeader() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp)
-    ) {
-        Text(
-            text = "Trade Center",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = RetroTextPrimary
-        )
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = "Find the perfect trade match",
-            style = MaterialTheme.typography.bodyMedium,
-            color = RetroTextSecondary
-        )
     }
 }
 
@@ -165,180 +156,48 @@ private fun TradesTabRow(
     }
 }
 
-
-// ─── Suggestions Tab ────────────────────────────────────────────────
+// ─── Empty state ────────────────────────────────────────────────────
 @Composable
-private fun SuggestionsTab(suggestions: List<TradeSuggestion>) {
+private fun EmptyState() {
     Column(
-        modifier = Modifier.padding(horizontal = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 48.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        suggestions.forEach { suggestion ->
-            SuggestionCard(suggestion)
-        }
-    }
-}
-
-@Composable
-private fun SuggestionCard(suggestion: TradeSuggestion) {
-    Card(
-        shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(18.dp)) {
-            // ── Match badge + seller info ────────────────────
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Match percentage badge
-                Box(
-                    modifier = Modifier
-                        .background(
-                            brush = Brush.linearGradient(
-                                listOf(Color(0xFF27AE60), Color(0xFF2ECC71))
-                            ),
-                            shape = RoundedCornerShape(10.dp)
-                        )
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        text = "${suggestion.matchPercentage}% Match",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-
-                // Seller info
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.Person, null,
-                        tint = RetroIcon,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(Modifier.width(3.dp))
-                    Text(
-                        text = suggestion.sellerName,
-                        fontSize = 12.sp,
-                        color = RetroTextSecondary
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Icon(
-                        Icons.Default.LocationOn, null,
-                        tint = RetroIcon,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(Modifier.width(2.dp))
-                    Text(
-                        text = suggestion.sellerDistance,
-                        fontSize = 12.sp,
-                        color = RetroTextSecondary
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // ── Item details ───────────────────────
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Icon
-                Box(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(BackgroundColor),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = suggestion.itemIcon, fontSize = 32.sp)
-                }
-                
-                Spacer(modifier = Modifier.width(16.dp))
-                
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = suggestion.itemName,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        color = RetroTextPrimary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = suggestion.itemCategory,
-                        fontSize = 12.sp,
-                        color = RetroTextSecondary
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = suggestion.requestedPrice,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 18.sp,
-                            color = RetroOrange
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = suggestion.marketValue,
-                            fontSize = 12.sp,
-                            color = RetroTextSecondary,
-                            textDecoration = TextDecoration.LineThrough
-                        )
-                    }
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Button(
-                    onClick = { /* Make Offer */ },
-                    colors = ButtonDefaults.buttonColors(containerColor = BackgroundColor),
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Make Offer", color = RetroOrange, fontWeight = FontWeight.Bold)
-                }
-                
-                Button(
-                    onClick = { /* Buy Now */ },
-                    colors = ButtonDefaults.buttonColors(containerColor = RetroOrange),
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Buy Now", color = Color.White, fontWeight = FontWeight.Bold)
-                }
-            }
-        }
+        Icon(
+            imageVector = Icons.Default.SwapHorizontalCircle,
+            contentDescription = null,
+            tint = RetroIcon,
+            modifier = Modifier.size(56.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "No trades found",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = RetroTextPrimary
+        )
+        Spacer(modifier = Modifier.height(4.dp))
     }
 }
 
 
 // ─── Active Trades Tab ──────────────────────────────────────────────
 @Composable
-private fun ActiveTradesTab(trades: List<ActiveTrade>) {
+private fun TradeList(trades: List<Trade>) {
     Column(
         modifier = Modifier.padding(horizontal = 24.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         trades.forEach { trade ->
-            ActiveTradeCard(trade)
+            TradeCard(trade)
         }
     }
 }
 
 @Composable
-private fun ActiveTradeCard(trade: ActiveTrade) {
+private fun TradeCard(trade: Trade) {
     Card(
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
@@ -387,7 +246,7 @@ private fun ActiveTradeCard(trade: ActiveTrade) {
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
-                            text = if (trade.isBuying) "Buying from ${trade.partnerName}" else "Selling to ${trade.partnerName}",
+                            text = if (trade.isBuying) "Buying from ${trade.sellerName}" else "Selling to ${trade.buyerName}",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = if (trade.isBuying) Color(0xFF2980B9) else Color(0xFF27AE60)
@@ -443,10 +302,9 @@ private fun ActiveTradeCard(trade: ActiveTrade) {
 private fun StatusBadge(status: TradeStatus) {
     val (bgColor, textColor) = when (status) {
         TradeStatus.PENDING -> Color(0xFFFFF3E0) to Color(0xFFE65100)
-        TradeStatus.ACCEPTED -> Color(0xFFE8F5E9) to Color(0xFF2E7D32)
-        TradeStatus.COUNTER_OFFER -> Color(0xFFE3F2FD) to Color(0xFF1565C0)
+        TradeStatus.ACCEPTED -> Color(0xFFE3F2FD) to Color(0xFF1565C0)
         TradeStatus.COMPLETED -> Color(0xFFF3E5F5) to Color(0xFF7B1FA2)
-        TradeStatus.DECLINED -> Color(0xFFFFEBEE) to Color(0xFFC62828)
+        TradeStatus.REJECTED -> Color(0xFFFFEBEE) to Color(0xFFC62828)
     }
 
     Box(

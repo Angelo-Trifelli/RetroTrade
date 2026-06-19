@@ -5,12 +5,11 @@ class Trade(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    created_at = db.Column(db.DateTime)
-
-    status = db.Column(
-        db.String(50),
-        default="PENDING"
-    )
+    created_at = db.Column(db.DateTime, nullable=False)
+    updated_at = db.Column(db.DateTime, nullable=False)
+    status = db.Column(db.String(50), default="PENDING")
+    offered_price = db.Column(db.Numeric(10, 2), nullable=False)
+    last_message = db.Column(db.String(255), nullable=True)
 
     item_id = db.Column(
         db.Integer,
@@ -18,13 +17,13 @@ class Trade(db.Model):
         nullable=False
     )
 
-    requester_id = db.Column(
+    buyer_id = db.Column(
         db.String(255),
         db.ForeignKey("user.id"),
         nullable=False
     )
 
-    receiver_id = db.Column(
+    seller_id = db.Column(
         db.String(255),
         db.ForeignKey("user.id"),
         nullable=False
@@ -37,10 +36,10 @@ class Trade(db.Model):
 
     requester = db.relationship(
         "User",
-        foreign_keys=[requester_id]
+        foreign_keys=[buyer_id]
     )
 
     receiver = db.relationship(
         "User",
-        foreign_keys=[receiver_id]
+        foreign_keys=[seller_id]
     )
