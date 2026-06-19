@@ -16,6 +16,7 @@ import com.example.retrotrade.ui.navigation.map.MapViewModel
 import com.example.retrotrade.ui.screens.item.ItemDetailsScreen
 import com.example.retrotrade.ui.screens.main.MainScreen
 import com.example.retrotrade.ui.screens.map.MapScreen
+import com.google.android.gms.maps.MapView
 
 fun NavGraphBuilder.mainNavGraph(
     navController: NavController
@@ -43,7 +44,7 @@ fun NavGraphBuilder.mainNavGraph(
 
         composable(route = Screen.Map.route) {
             val mapViewModel: MapViewModel = viewModel()
-            ObserveNavigation(mapViewModel, navController)
+            ObserveNavigationMap(mapViewModel, navController)
             MapScreen(mapViewModel)
         }
     }
@@ -53,6 +54,24 @@ fun NavGraphBuilder.mainNavGraph(
 @Composable
 private fun ObserveNavigation(
     viewModel: BaseViewModel,
+    navController: NavController
+) {
+    LaunchedEffect(Unit) {
+        viewModel.navEvent.collect { event ->
+            when (event) {
+                is NavEvent.Navigate ->
+                    navController.navigate(event.route)
+
+                NavEvent.PopBackStack ->
+                    navController.popBackStack()
+            }
+        }
+    }
+}
+
+@Composable
+private fun ObserveNavigationMap(
+    viewModel: MapViewModel,
     navController: NavController
 ) {
     LaunchedEffect(Unit) {

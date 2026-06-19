@@ -1,5 +1,9 @@
 package com.example.retrotrade.ui.screens.map
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -23,13 +27,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.example.retrotrade.model.ItemCategory
+import com.example.retrotrade.model.toClusterItem
+import com.example.retrotrade.rest.model.response.LoadItemsResponse
 import com.example.retrotrade.ui.navigation.GenericUiState
 import com.example.retrotrade.ui.navigation.map.MapUiState
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.Circle
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.MapsComposeExperimentalApi
+import com.google.maps.android.compose.MarkerComposable
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.clustering.Clustering
+import com.google.maps.android.compose.rememberCameraPositionState
 
 // ── Colour tokens ──────────────────────────────────────────────────────────────
 private val Surface       = Color(0xFF1C1B1F)
@@ -44,26 +62,100 @@ private val SliderTrack   = Color(0xFF3A3830)
 private val ALL_CATEGORIES = ItemCategory.entries.toList().filter { it != ItemCategory.OTHER }
 
 
+@OptIn(MapsComposeExperimentalApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun MapContent(
     uiState: MapUiState       = MapUiState(),
     dataState: GenericUiState = GenericUiState.Idle,
+    userLocation: LatLng?     = null,
     onBack: () -> Unit        = {},
     onSearchQueryChange: (String) -> Unit = {},
     onItemCategoryChange: (ItemCategory) -> Unit = {},
     onRadiusChange: (Float) -> Unit = {},
-    onFilterWindowClosed: () -> Unit
+    onFilterWindowClosed: () -> Unit,
+    onClusterClick: (List<LoadItemsResponse>) -> Unit = {},
+    onClusterDismiss: () -> Unit       = {}
 ) {
 
     var filtersExpanded by remember { mutableStateOf(false) }
+    var locationCentered by remember { mutableStateOf(false) }
+    var locationPermissionGranted by remember { mutableStateOf(false) }
+    val cameraPositionState = rememberCameraPositionState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    val context = LocalContext.current
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        locationPermissionGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+                && permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+    }
+
+    LaunchedEffect(Unit) {
+        val fine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
+        val coarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
+
+        if (fine == PackageManager.PERMISSION_GRANTED && coarse == PackageManager.PERMISSION_GRANTED) {
+            locationPermissionGranted = true
+        } else {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
+
+    LaunchedEffect(userLocation) {
+        if (!locationCentered) {
+            userLocation?.let { pos ->
+                cameraPositionState.animate(
+                    update = CameraUpdateFactory.newLatLngZoom(pos, 15f),  // zoom 15 = street level
+                    durationMs = 800
+                )
+            }
+            if (userLocation != null) {
+                locationCentered = true
+            }
+        }
+    }
+
 
     Box(modifier = Modifier.fillMaxSize()) {
 
         // ── Map ───────
         GoogleMap(
-            modifier = Modifier.fillMaxSize(),
-            onMapLoaded = { /* handle map loaded */ }
-        )
+            modifier            = Modifier.fillMaxSize(),
+            cameraPositionState = cameraPositionState,
+            properties          = MapProperties(isMyLocationEnabled = false), // we draw our own dot
+            uiSettings          = MapUiSettings(myLocationButtonEnabled = false),
+            onMapLoaded         = { }
+        ) {
+            // Custom user-location dot
+            userLocation?.let { pos ->
+                UserLocationDot(position = pos)
+            }
+
+            Clustering(
+                items = uiState.items.map { it.toClusterItem() },
+                onClusterClick = { cluster ->
+                    onClusterClick(cluster.items.map { it.item })
+                    false
+                },
+                onClusterItemClick = { clusterItem ->
+                    onClusterClick(listOf(clusterItem.item))
+                    false
+                },
+                clusterContent = { cluster ->
+                    ClusterBubble(count = cluster.size)
+                },
+                clusterItemContent = { clusterItem ->
+                    ItemMarkerBubble(item = clusterItem.item)
+                }
+            )
+        }
 
         // ── Top gradient scrim — keeps search bar legible ──────────────────
         Box(
@@ -147,8 +239,80 @@ fun MapContent(
                     .padding(bottom = 24.dp)
             )
         }
+
+        // ── Cluster bottom sheet ───────────────────────────────────────────
+        if (uiState.selectedClusterItems.isNotEmpty()) {
+            ModalBottomSheet(
+                onDismissRequest   = onClusterDismiss,
+                sheetState         = sheetState,
+                containerColor     = Surface,
+                contentColor       = TextPrimary,
+                shape              = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+            ) {
+                ClusterBottomSheet(
+                    items     = uiState.selectedClusterItems,
+                    onDismiss = onClusterDismiss
+                )
+            }
+        }
     }
 }
+
+
+@Composable
+private fun UserLocationDot(position: LatLng) {
+    // Outer pulse ring
+    Circle(
+        center      = position,
+        radius      = 40.0,           // metres
+        fillColor   = Accent.copy(alpha = 0.15f),
+        strokeColor = Accent.copy(alpha = 0.35f),
+        strokeWidth = 2f
+    )
+    // Solid centre dot
+    Circle(
+        center      = position,
+        radius      = 10.0,
+        fillColor   = Accent,
+        strokeColor = Color.White,
+        strokeWidth = 3f
+    )
+}
+
+@Composable
+private fun ClusterBubble(count: Int) {
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .clip(CircleShape)
+            .background(Accent)
+            .border(2.dp, Color.White, CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text       = if (count > 99) "99+" else count.toString(),
+            color      = Color.White,
+            fontSize   = 13.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+private fun ItemMarkerBubble(item: LoadItemsResponse) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(SurfacePanel)
+            .border(1.dp, Accent, RoundedCornerShape(12.dp))
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = item.iconChar, fontSize = 18.sp)
+    }
+}
+
+
 
 // ── Search bar ─────────────────────────────────────────────────────────────────
 @Composable
@@ -409,6 +573,94 @@ private fun ActiveFilterBadge(
             color    = TextPrimary,
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+@Composable
+private fun ClusterBottomSheet(
+    items    : List<LoadItemsResponse>,
+    onDismiss: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .padding(bottom = 32.dp)
+    ) {
+        // Header
+        Row(
+            modifier      = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text       = if (items.size == 1) "1 item here" else "${items.size} items here",
+                color      = TextPrimary,
+                fontSize   = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier   = Modifier.weight(1f)
+            )
+            IconButton(onClick = onDismiss) {
+                Icon(Icons.Default.Close, contentDescription = "Close", tint = TextSecondary)
+            }
+        }
+
+        Spacer(Modifier.height(12.dp))
+        HorizontalDivider(color = ChipBorder)
+        Spacer(Modifier.height(12.dp))
+
+        // Item list
+        items.forEach { item ->
+            ClusterItemRow(item = item)
+            Spacer(Modifier.height(10.dp))
+        }
+    }
+}
+
+@Composable
+private fun ClusterItemRow(item: LoadItemsResponse) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(Color(0xFF2A2926))
+            .border(1.dp, ChipBorder, RoundedCornerShape(14.dp))
+            .padding(14.dp),
+        verticalAlignment     = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        // Icon bubble
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(AccentMuted)
+                .border(1.dp, Accent, RoundedCornerShape(10.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = item.iconChar, fontSize = 20.sp)
+        }
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text       = item.name,
+                color      = TextPrimary,
+                fontSize   = 15.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text     = item.category.label,
+                color    = TextSecondary,
+                fontSize = 12.sp
+            )
+        }
+
+        Text(
+            text       = "~€${item.estimatedValue}",
+            color      = Accent,
+            fontSize   = 14.sp,
+            fontWeight = FontWeight.SemiBold
         )
     }
 }

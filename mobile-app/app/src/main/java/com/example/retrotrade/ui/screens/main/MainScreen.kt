@@ -77,7 +77,7 @@ fun MainScreen(
 
             composable(Screen.Scan.route) {
                 val scanViewModel: ScanViewModel = viewModel()
-                ObserveNavEvents(scanViewModel, navController)
+                ObserveScanEvents(scanViewModel, navController)
                 ScanScreen(scanViewModel)
             }
 
@@ -131,6 +131,30 @@ private fun PlaceholderTab(
 @Composable
 private fun ObserveNavEvents(
     viewModel: BaseViewModel,
+    navController: NavController
+) {
+    LaunchedEffect(viewModel) {
+        viewModel.navEvent.collect { event ->
+            when (event) {
+                is NavEvent.Navigate -> {
+                    navController.navigate(event.route) {
+                        // On logout, clear the entire back stack
+                        if (event.route == Screen.AuthGraph.route) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                }
+
+                NavEvent.PopBackStack ->
+                    navController.popBackStack()
+            }
+        }
+    }
+}
+
+@Composable
+private fun ObserveScanEvents(
+    viewModel: ScanViewModel,
     navController: NavController
 ) {
     LaunchedEffect(viewModel) {

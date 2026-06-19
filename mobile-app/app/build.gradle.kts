@@ -77,4 +77,9 @@ dependencies {
 
     //Google Maps compose library
     implementation("com.google.maps.android:maps-compose:4.3.0")
+    //Google Maps compose utils
+    implementation("com.google.maps.android:maps-compose-utils:4.3.0")
+
+    //GPS location tracking
+    implementation("com.google.android.gms:play-services-location:21.3.0")
 }

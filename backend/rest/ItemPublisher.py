@@ -46,6 +46,8 @@ def create_item():
         category = data.get('category'),
         estimated_value = data.get('estimatedValue'),
         icon_char = base64.b64encode(data.get('iconChar').encode('utf-8')).decode('ascii'),
+        latitude = data.get('latitude'),
+        longitude = data.get('longitude'),
         photo = base64.b64decode(data.get("photo")),
         status = 'ACTIVE',
         seller_id = firebase_uid      

@@ -7,5 +7,7 @@ data class CreateItemRequest(
     val name: String,
     val category: ItemCategory,
     val estimatedValue: String,
-    val iconChar: String
+    val iconChar: String,
+    val latitude: Double,
+    val longitude: Double
 )

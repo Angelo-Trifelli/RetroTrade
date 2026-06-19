@@ -1,15 +1,25 @@
 package com.example.retrotrade.ui.navigation.scan
 
+import android.annotation.SuppressLint
+import android.app.Application
 import android.graphics.Bitmap
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.retrotrade.model.ItemCategory
 import com.example.retrotrade.repository.ItemRepository
 import com.example.retrotrade.ui.navigation.BaseViewModel
 import com.example.retrotrade.ui.navigation.GenericUiState
+import com.example.retrotrade.ui.navigation.NavEvent
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.maps.model.LatLng
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 // ─── Icon char options ──────────────────────────────────────────────
 val availableIconChars = listOf(
@@ -17,7 +27,9 @@ val availableIconChars = listOf(
     "🃏", "🎲", "🧸", "📷", "💎", "🏆", "🎸", "📚"
 )
 
-class ScanViewModel : BaseViewModel() {
+class ScanViewModel(
+    application: Application
+) : AndroidViewModel(application) {
 
     private val itemRepository = ItemRepository()
 
@@ -27,6 +39,9 @@ class ScanViewModel : BaseViewModel() {
     //Separate loading/error state so the UI can react without inspecting every field of ScanUiState
     private val _dataState = MutableStateFlow<GenericUiState>(GenericUiState.Idle)
     val dataState: StateFlow<GenericUiState> = _dataState.asStateFlow()
+
+    private val _navEvent = MutableSharedFlow<NavEvent>()
+    val navEvent = _navEvent.asSharedFlow()
 
 
     /* --------------------------- PUBLIC API --------------------------- */
@@ -60,12 +75,20 @@ class ScanViewModel : BaseViewModel() {
         _dataState.value = GenericUiState.Loading
 
         viewModelScope.launch {
+            val location = getCurrentLocation()
+            if (location == null) {
+                _dataState.value = GenericUiState.Error("Unable to get your location. Please try again.")
+                return@launch
+            }
+
             itemRepository.createItem(
                 _uiState.value.base64Photo,
                 _uiState.value.itemName,
                 _uiState.value.selectedCategory!!,
                 _uiState.value.estimatedValue,
-                _uiState.value.selectedIconChar!!
+                _uiState.value.selectedIconChar!!,
+                location.latitude,
+                location.longitude
             ).onSuccess {
                 _dataState.value = GenericUiState.Success
             }.onFailure {
@@ -85,5 +108,33 @@ class ScanViewModel : BaseViewModel() {
 
     fun resetDataState() {
         _dataState.value = GenericUiState.Idle
+    }
+
+    @SuppressLint("MissingPermission")
+    private suspend fun getCurrentLocation(): LatLng? {
+        val client = LocationServices.getFusedLocationProviderClient(getApplication())
+        return suspendCancellableCoroutine { cont ->
+            client.getCurrentLocation(
+                Priority.PRIORITY_HIGH_ACCURACY,
+                null
+            ).addOnSuccessListener { location ->
+                if (cont.isActive) cont.resume(location?.let { LatLng(it.latitude, it.longitude) }) { _, _, _ -> }
+            }.addOnFailureListener {
+                if (cont.isActive) cont.resume(null) { _, _, _ -> }
+            }
+        }
+    }
+
+
+    private fun navigate(route: String) {
+        viewModelScope.launch {
+            _navEvent.emit(NavEvent.Navigate(route))
+        }
+    }
+
+    private fun popBackStack() {
+        viewModelScope.launch {
+            _navEvent.emit(NavEvent.PopBackStack)
+        }
     }
 }

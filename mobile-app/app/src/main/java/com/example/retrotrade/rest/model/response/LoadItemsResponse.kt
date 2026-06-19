@@ -9,5 +9,7 @@ data class LoadItemsResponse(
     val category: ItemCategory,
     val estimatedValue: String,
     val iconChar: String,
-    val status: ItemStatus
+    val status: ItemStatus,
+    val latitude: Double,
+    val longitude: Double
 )

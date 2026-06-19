@@ -17,6 +17,8 @@ CREATE TABLE item (
     category  VARCHAR(255) NOT NULL,
     estimated_value DECIMAL(10,2) NOT NULL,
     icon_char VARCHAR(50) DEFAULT NULL,
+    latitude DOUBLE NOT NULL,
+    longitude DOUBLE NOT NULL,
     photo LONGBLOB NOT NULL,
     status VARCHAR(50) NOT NULL DEFAULT "ACTIVE",
 

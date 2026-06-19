@@ -31,14 +31,17 @@ class ItemRepository(
         }
     }
 
-    suspend fun createItem(photo: String, name: String, category: ItemCategory, estimatedValue: String, iconChar: String): Result<Unit> {
+    suspend fun createItem(photo: String, name: String, category: ItemCategory, estimatedValue: String,
+                           iconChar: String, latitude: Double, longitude: Double): Result<Unit> {
         return try {
             val request = CreateItemRequest(
                 photo = photo,
                 name = name,
                 category = category,
                 estimatedValue = estimatedValue,
-                iconChar = iconChar
+                iconChar = iconChar,
+                latitude = latitude,
+                longitude = longitude
             )
 
             val response = itemService.createItem(request)
