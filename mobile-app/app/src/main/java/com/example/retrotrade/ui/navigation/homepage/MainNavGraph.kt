@@ -5,18 +5,18 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.example.retrotrade.ui.navigation.BaseViewModel
 import com.example.retrotrade.ui.navigation.NavEvent
 import com.example.retrotrade.ui.navigation.Screen
-import com.example.retrotrade.ui.navigation.collection.ItemDetailsViewModel
+import com.example.retrotrade.ui.navigation.item.ItemDetailsViewModel
 import com.example.retrotrade.ui.navigation.map.MapViewModel
 import com.example.retrotrade.ui.screens.item.ItemDetailsScreen
 import com.example.retrotrade.ui.screens.main.MainScreen
 import com.example.retrotrade.ui.screens.map.MapScreen
-import com.google.android.gms.maps.MapView
 
 fun NavGraphBuilder.mainNavGraph(
     navController: NavController
@@ -33,7 +33,11 @@ fun NavGraphBuilder.mainNavGraph(
             route = Screen.ItemDetails().route,
             arguments = listOf(
                 navArgument("itemId") {
-                    type = androidx.navigation.NavType.StringType
+                    type = NavType.StringType
+                },
+                navArgument("source") {
+                    type = NavType.StringType
+                    defaultValue = "collection"
                 }
             )
         ) {

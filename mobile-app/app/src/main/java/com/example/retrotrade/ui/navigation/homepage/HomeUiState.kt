@@ -1,5 +1,6 @@
 package com.example.retrotrade.ui.navigation.homepage
 
+import com.example.retrotrade.model.ItemCategory
 import com.example.retrotrade.model.RecentItem
 import com.example.retrotrade.model.TrendingItem
 
@@ -13,11 +14,11 @@ data class HomeUiState(
 
 private fun initDefaultRecentItems(): List<RecentItem> {
     return listOf(
-        RecentItem("Charizard Holo",    "Trading Cards",    "$285.00", "🔥"),
-        RecentItem("Game Boy Color",    "Retro Games",      "$120.00", "🎮"),
-        RecentItem("Levi's 501 '89",    "Vintage Clothing", "$95.00",  "👖"),
-        RecentItem("N64 Controller",    "Retro Games",      "$45.00",  "🕹️"),
-        RecentItem("Pikachu 1st Ed.",   "Trading Cards",    "$210.00", "⚡")
+        RecentItem("Charizard Holo", ItemCategory.TRADING_CARDS,    "$285.00", "🔥"),
+        RecentItem("Game Boy Color", ItemCategory.RETRO_GAMES,      "$120.00", "🎮"),
+        RecentItem("Levi's 501 '89", ItemCategory.VINTAGE_CLOTHING, "$95.00",  "👖"),
+        RecentItem("N64 Controller", ItemCategory.RETRO_GAMES,      "$45.00",  "🕹️"),
+        RecentItem("Pikachu 1st Ed.", ItemCategory.TRADING_CARDS,    "$210.00", "⚡")
     )
 }
 

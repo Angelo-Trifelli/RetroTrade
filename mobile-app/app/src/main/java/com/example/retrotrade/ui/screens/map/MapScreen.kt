@@ -17,6 +17,7 @@ fun MapScreen(
     val uiState by viewModel.uiState.collectAsState()
     val dataState by viewModel.dataState.collectAsState()
     val userLocation by viewModel.userLocation.collectAsState()
+    val lastCameraPosition by viewModel.lastCameraPosition.collectAsState()
 
     if (dataState is GenericUiState.Error) {
         AppErrorDialog(
@@ -34,12 +35,14 @@ fun MapScreen(
         uiState = uiState,
         dataState = dataState,
         userLocation = userLocation,
+        lastCameraPosition = lastCameraPosition,
         onBack = { viewModel.onBack() },
         onSearchQueryChange = { viewModel.onSearchQueryChanged(it) },
         onItemCategoryChange = { viewModel.onItemCategoryChange(it) },
         onRadiusChange = { viewModel.onRadiusChange(it) },
         onFilterWindowClosed = { viewModel.onFilterWindowClosed() },
         onClusterClick       = { viewModel.onClusterClick(it) },
-        onClusterDismiss     = { viewModel.onClusterDismiss() }
+        onClusterDismiss     = { viewModel.onClusterDismiss() },
+        onMapItemSelected    = { itemId, currentPosition -> viewModel.onMapItemSelected(itemId, currentPosition) }
     )
 }

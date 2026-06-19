@@ -6,7 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.retrotrade.ui.components.common.AppErrorDialog
 import com.example.retrotrade.ui.navigation.GenericUiState
-import com.example.retrotrade.ui.navigation.collection.ItemDetailsViewModel
+import com.example.retrotrade.ui.navigation.item.ItemDetailsViewModel
 
 @Composable
 fun ItemDetailsScreen(

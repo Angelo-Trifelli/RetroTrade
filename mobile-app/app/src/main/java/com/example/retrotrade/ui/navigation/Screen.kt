@@ -20,9 +20,9 @@ sealed class Screen(val route: String) {
     data object Map : Screen("map")
 
     // Item Details screen
-    data class ItemDetails(val subRoute: String = "item_details/{itemId}") : Screen(subRoute) {
+    data class ItemDetails(val subRoute: String = "item_details/{itemId}?source={source}") : Screen(subRoute) {
         companion object {
-            fun createRoute(itemId: String) = "item_details/$itemId"
+            fun createRoute(itemId: String, source: String = "collection") = "item_details/$itemId?source=$source"
         }
     }
 }

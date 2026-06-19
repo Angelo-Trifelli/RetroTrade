@@ -27,4 +27,9 @@ interface ItemService {
         @Path("id") id: String
     ): Response<ItemDetailsResponse>
 
+    @POST("/items/{id}/viewed")
+    suspend fun addItemView(
+        @Path("id") id: String
+    ): Response<Unit>
+
 }

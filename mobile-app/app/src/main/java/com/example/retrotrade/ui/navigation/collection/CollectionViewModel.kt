@@ -41,7 +41,7 @@ class CollectionViewModel : BaseViewModel() {
     }
 
     fun onItemSelected(itemId: String) {
-        navigate(Screen.ItemDetails.createRoute(itemId))
+        navigate(Screen.ItemDetails.createRoute(itemId, source = Screen.Collection.route))
     }
 
     fun resetDataState() {

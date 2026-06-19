@@ -31,6 +31,10 @@ class HomeViewModel : BaseViewModel() {
         loadHomeData()
     }
 
+    fun refresh() {
+        loadHomeData()
+    }
+
     private fun loadHomeData() {
         viewModelScope.launch(Dispatchers.IO) {
             _dataState.value = GenericUiState.Loading

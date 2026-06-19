@@ -74,4 +74,20 @@ class ItemRepository(
             Result.failure(e)
         }
     }
+
+    suspend fun registerItemView(itemId: String): Result<Unit> {
+        return try {
+            val response = itemService.addItemView(itemId)
+
+            if (!response.isSuccessful) {
+                return Result.failure(
+                    Exception(ErrorParser.parseError(response.errorBody()) ?: "Unknown error")
+                )
+            }
+
+            Result.success(response.body() ?: Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

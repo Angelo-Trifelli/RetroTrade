@@ -1,14 +1,14 @@
-package com.example.retrotrade.ui.navigation.collection
+package com.example.retrotrade.ui.navigation.item
 
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Base64
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import com.example.retrotrade.model.CollectionListItem
 import com.example.retrotrade.repository.ItemRepository
 import com.example.retrotrade.ui.navigation.BaseViewModel
 import com.example.retrotrade.ui.navigation.GenericUiState
-import com.example.retrotrade.ui.screens.collection.CollectionFilter
+import com.example.retrotrade.ui.navigation.Screen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,8 +33,10 @@ class ItemDetailsViewModel(
     /* --------------------------- CONSTRUCTOR --------------------------- */
     init {
         val itemId: String? = savedStateHandle.get<String>("itemId")
+        val source: String? = savedStateHandle.get<String>("source")
+
         if (itemId != null) {
-            loadItemDetails(itemId)
+            loadItemDetails(itemId, source)
         } else {
             _dataState.value = GenericUiState.Error("Item ID is missing")
         }
@@ -50,20 +52,26 @@ class ItemDetailsViewModel(
     }
 
     /* ----------------------- PRIVATE FUNCTIONS ------------------------ */
-    private fun loadItemDetails(itemId: String) {
+    private fun loadItemDetails(itemId: String, source: String?) {
         viewModelScope.launch {
             _dataState.value = GenericUiState.Loading
 
             try {
                 val itemDefer = async(Dispatchers.IO) { itemRepository.loadItemDetails(itemId) }
+                val registerView = if (source == Screen.Map.route) {
+                    async(Dispatchers.IO) { itemRepository.registerItemView(itemId) }
+                } else null
 
                 val itemResponse = itemDefer.await().getOrThrow()
+                registerView?.await()?.getOrNull()
+
                 val bitmap = decodeBase64ToBitmap(itemResponse.photo)
 
                 _uiState.update {
                     it.copy(
                         item = itemResponse,
-                        photoBitmap = bitmap
+                        photoBitmap = bitmap,
+                        isFromMap = source != null && source == Screen.Map.route
                     )
                 }
 
@@ -72,7 +80,8 @@ class ItemDetailsViewModel(
                 _uiState.update {
                     it.copy(
                         item = null,
-                        photoBitmap = null
+                        photoBitmap = null,
+                        isFromMap = false
                     )
                 }
 
@@ -81,7 +90,7 @@ class ItemDetailsViewModel(
         }
     }
 
-    private fun decodeBase64ToBitmap(base64Str: String?): android.graphics.Bitmap? {
+    private fun decodeBase64ToBitmap(base64Str: String?): Bitmap? {
         if (base64Str.isNullOrEmpty()) return null
         return try {
             val decodedBytes = Base64.decode(base64Str, Base64.DEFAULT)

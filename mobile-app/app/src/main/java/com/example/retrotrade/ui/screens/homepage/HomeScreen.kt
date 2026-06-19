@@ -26,6 +26,7 @@ fun HomeScreen(
     HomeContent(
         uiState = uiState,
         dataState = dataState,
-        onFindTrades = { viewModel.onFindTrades() }
+        onFindTrades = { viewModel.onFindTrades() },
+        onRefresh = { viewModel.refresh() }
     )
 }

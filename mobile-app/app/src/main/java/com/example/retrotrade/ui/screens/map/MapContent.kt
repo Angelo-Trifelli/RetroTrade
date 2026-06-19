@@ -38,6 +38,7 @@ import com.example.retrotrade.rest.model.response.LoadItemsResponse
 import com.example.retrotrade.ui.navigation.GenericUiState
 import com.example.retrotrade.ui.navigation.map.MapUiState
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.Circle
 import com.google.maps.android.compose.GoogleMap
@@ -68,19 +69,23 @@ fun MapContent(
     uiState: MapUiState       = MapUiState(),
     dataState: GenericUiState = GenericUiState.Idle,
     userLocation: LatLng?     = null,
+    lastCameraPosition: CameraPosition? = null,
     onBack: () -> Unit        = {},
     onSearchQueryChange: (String) -> Unit = {},
     onItemCategoryChange: (ItemCategory) -> Unit = {},
     onRadiusChange: (Float) -> Unit = {},
     onFilterWindowClosed: () -> Unit,
     onClusterClick: (List<LoadItemsResponse>) -> Unit = {},
-    onClusterDismiss: () -> Unit       = {}
+    onClusterDismiss: () -> Unit       = {},
+    onMapItemSelected: (String, CameraPosition) -> Unit
 ) {
 
     var filtersExpanded by remember { mutableStateOf(false) }
-    var locationCentered by remember { mutableStateOf(false) }
+    var locationCentered by remember { mutableStateOf(lastCameraPosition != null) } //skip centering if we have already a position
     var locationPermissionGranted by remember { mutableStateOf(false) }
-    val cameraPositionState = rememberCameraPositionState()
+    val cameraPositionState = rememberCameraPositionState {
+        lastCameraPosition?.let { position = it }
+    }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val context = LocalContext.current
@@ -251,7 +256,8 @@ fun MapContent(
             ) {
                 ClusterBottomSheet(
                     items     = uiState.selectedClusterItems,
-                    onDismiss = onClusterDismiss
+                    onDismiss = onClusterDismiss,
+                    onMapItemSelected = { itemId -> onMapItemSelected(itemId, cameraPositionState.position)}
                 )
             }
         }
@@ -580,7 +586,8 @@ private fun ActiveFilterBadge(
 @Composable
 private fun ClusterBottomSheet(
     items    : List<LoadItemsResponse>,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onMapItemSelected: (String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -611,21 +618,31 @@ private fun ClusterBottomSheet(
 
         // Item list
         items.forEach { item ->
-            ClusterItemRow(item = item)
+            ClusterItemRow(
+                item = item,
+                onMapItemSelected = { itemId ->
+                    onDismiss()
+                    onMapItemSelected(itemId)
+                }
+            )
             Spacer(Modifier.height(10.dp))
         }
     }
 }
 
 @Composable
-private fun ClusterItemRow(item: LoadItemsResponse) {
+private fun ClusterItemRow(
+    item: LoadItemsResponse,
+    onMapItemSelected: (String) -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
             .background(Color(0xFF2A2926))
             .border(1.dp, ChipBorder, RoundedCornerShape(14.dp))
-            .padding(14.dp),
+            .padding(14.dp)
+            .clickable{ onMapItemSelected(item.id) },
         verticalAlignment     = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {

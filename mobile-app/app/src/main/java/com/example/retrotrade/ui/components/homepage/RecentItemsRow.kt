@@ -121,14 +121,14 @@ private fun RecentItemCard(
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = item.category,
+                    text = item.category.toString(),
                     fontSize = 11.sp,
                     color = RetroTextSecondary
                 )
             }
 
             Text(
-                text = item.estimatedValue,
+                text = "${item.estimatedValue} €",
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 16.sp,
                 color = RetroOrange

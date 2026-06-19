@@ -16,7 +16,9 @@ import androidx.lifecycle.AndroidViewModel
 import com.example.retrotrade.repository.ItemRepository
 import com.example.retrotrade.rest.model.response.LoadItemsResponse
 import com.example.retrotrade.ui.navigation.NavEvent
+import com.example.retrotrade.ui.navigation.Screen
 import com.google.android.gms.location.*
+import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -41,6 +43,10 @@ class MapViewModel(
     // Current device location — null until first fix
     private val _userLocation = MutableStateFlow<LatLng?>(null)
     val userLocation: StateFlow<LatLng?> = _userLocation.asStateFlow()
+
+    // Last camera position the user was at — persisted across navigation
+    private val _lastCameraPosition = MutableStateFlow<CameraPosition?>(null)
+    val lastCameraPosition: StateFlow<CameraPosition?> = _lastCameraPosition.asStateFlow()
 
     private val _navEvent = MutableSharedFlow<NavEvent>()
     val navEvent = _navEvent.asSharedFlow()
@@ -82,6 +88,15 @@ class MapViewModel(
 
     fun onClusterDismiss() {
         _uiState.update { it.copy(selectedClusterItems = emptyList()) }
+    }
+
+    fun onMapItemSelected(itemId: String, currentCameraPosition: CameraPosition) {
+        saveCameraPosition(currentCameraPosition)
+        navigate(Screen.ItemDetails.createRoute(itemId, source = Screen.Map.route))
+    }
+
+    fun saveCameraPosition(position: CameraPosition) {
+        _lastCameraPosition.value = position
     }
 
     private fun loadItems() {
