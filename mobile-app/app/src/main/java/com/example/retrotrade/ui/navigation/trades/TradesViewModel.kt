@@ -2,9 +2,11 @@ package com.example.retrotrade.ui.navigation.trades
 
 import androidx.lifecycle.viewModelScope
 import com.example.retrotrade.model.CollectionListItem
+import com.example.retrotrade.model.Trade
 import com.example.retrotrade.repository.TradeRepository
 import com.example.retrotrade.ui.navigation.BaseViewModel
 import com.example.retrotrade.ui.navigation.GenericUiState
+import com.example.retrotrade.ui.navigation.Screen
 import com.example.retrotrade.ui.screens.collection.CollectionFilter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -37,10 +39,14 @@ class TradesViewModel : BaseViewModel() {
         loadTradesData()
     }
 
-
     fun onTabSelected(index: Int) {
         _uiState.value = _uiState.value.copy(selectedTabIndex = index)
     }
+
+    fun onOpenChat(trade: Trade) {
+        navigate(Screen.TradeChat.createRoute(trade.id))
+    }
+
 
     fun resetDataState() {
         _dataState.value = GenericUiState.Idle

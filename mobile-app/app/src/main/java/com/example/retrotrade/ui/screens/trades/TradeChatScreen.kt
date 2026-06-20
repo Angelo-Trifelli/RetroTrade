@@ -6,11 +6,11 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.retrotrade.ui.components.common.AppErrorDialog
 import com.example.retrotrade.ui.navigation.GenericUiState
-import com.example.retrotrade.ui.navigation.trades.TradesViewModel
+import com.example.retrotrade.ui.navigation.trades.TradeChatViewModel
 
 @Composable
-fun TradesScreen(
-    viewModel: TradesViewModel = viewModel()
+fun TradeChatScreen(
+    viewModel: TradeChatViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val dataState by viewModel.dataState.collectAsState()
@@ -23,11 +23,13 @@ fun TradesScreen(
         )
     }
 
-    TradesContent(
+    TradeChatContent(
         uiState = uiState,
         dataState = dataState,
-        onTabSelected = { viewModel.onTabSelected(it) },
-        onOpenChat = { viewModel.onOpenChat(it) },
-        onRefresh = { viewModel.onRefresh() }
+        onBack = viewModel::onGoBack,
+        onSendMessage = viewModel::sendMessage,
+        onCompleteTrade = viewModel::completeTrade,
+        onAcceptTrade = viewModel::acceptTrade,
+        onRejectTrade = viewModel::rejectTrade
     )
 }

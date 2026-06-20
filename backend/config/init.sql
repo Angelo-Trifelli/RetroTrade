@@ -81,3 +81,23 @@ CREATE TABLE trade (
         REFERENCES user(id)
         ON DELETE CASCADE
 );
+
+CREATE TABLE chat_message (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    text VARCHAR(255) DEFAULT NULL,
+
+	trade_id INT NOT NULL,
+    sender_id VARCHAR(255) NOT NULL,
+
+    CONSTRAINT FK_CHAT_MESSAGE_TRADE_ID
+        FOREIGN KEY (trade_id)
+        REFERENCES trade(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT FK_CHAT_MESSAGE_SENDER_ID
+        FOREIGN KEY (sender_id)
+        REFERENCES user(id)
+        ON DELETE CASCADE
+);

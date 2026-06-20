@@ -70,15 +70,6 @@ fun HomeContent(
             RecentItemsRow(items = uiState.recentItems)
 
             Spacer(modifier = Modifier.height(28.dp))
-
-            // ── Trending near you ───────────────────────────────
-            SectionHeader(title = "Trending Near You")
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            TrendingItemsList(items = uiState.trendingItems)
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

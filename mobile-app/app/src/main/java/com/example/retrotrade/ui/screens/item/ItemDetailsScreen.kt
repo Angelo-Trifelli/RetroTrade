@@ -26,6 +26,7 @@ fun ItemDetailsScreen(
     ItemDetailsContent(
         uiState = uiState,
         dataState = dataState,
-        onGoBack = { viewModel.onGoBack() }
+        onGoBack = { viewModel.onGoBack() },
+        onSubmitOffer = { amount, message -> viewModel.onSubmitOffer(amount, message) }
     )
 }

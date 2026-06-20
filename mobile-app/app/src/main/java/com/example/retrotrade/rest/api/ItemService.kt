@@ -14,7 +14,7 @@ interface ItemService {
 
     @GET("/items")
     suspend fun loadItems(
-        @Query("userId") userId: String
+        @Query("userId") userId: String?,
     ): Response<List<LoadItemsResponse>>
 
     @POST("/items")

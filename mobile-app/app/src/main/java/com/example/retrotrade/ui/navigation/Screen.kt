@@ -25,4 +25,10 @@ sealed class Screen(val route: String) {
             fun createRoute(itemId: String, source: String = "collection") = "item_details/$itemId?source=$source"
         }
     }
+
+    data class TradeChat(val subRoute: String = "trade_chat/{tradeId}") : Screen(subRoute) {
+        companion object {
+            fun createRoute(tradeId: String) = "trade_chat/$tradeId"
+        }
+    }
 }

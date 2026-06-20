@@ -22,15 +22,20 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 @firebase_required
 def get_items():
     user_id = request.args.get('userId', type=str)
+    firebase_uid = g.firebase_user['uid']
     
     if user_id is None:
-        return ResponseBuilder.create_response("Bad Request", 400, True)
-    
-    items = (
-        db.session.query(Item)
-        .filter(Item.seller_id == user_id)
-        .all()
-    )
+        items = (
+            db.session.query(Item)
+            .filter(Item.seller_id != firebase_uid)
+            .all()
+        )
+    else:
+        items = (
+            db.session.query(Item)
+            .filter(Item.seller_id == user_id)
+            .all()
+        )
 
     return ResponseBuilder.create_response([item.to_dict() for item in items], 200, False)
 

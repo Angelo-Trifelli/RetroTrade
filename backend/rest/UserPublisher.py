@@ -23,8 +23,14 @@ def get_user_stats(id):
     pending_trades_count = (
         db.session.query(func.count(Trade.id))
         .filter(
-            Trade.seller_id == firebase_uid,
-            Trade.status == "PENDING"
+            or_(
+                Trade.seller_id == firebase_uid,
+                Trade.buyer_id == firebase_uid
+            ),
+            or_(
+                Trade.status == "PENDING",
+                Trade.status == "ACCEPTED"
+            )
         )
         .scalar()
     )

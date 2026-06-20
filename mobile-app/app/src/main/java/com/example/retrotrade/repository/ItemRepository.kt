@@ -16,7 +16,28 @@ class ItemRepository(
 
     suspend fun loadItems(): Result<List<LoadItemsResponse>> {
         return try {
+            if (UserSession.currentUser == null || UserSession.currentUser?.id == null) {
+                return Result.failure(Exception("User not logged in"))
+            }
+
             val response = itemService.loadItems(UserSession.currentUser?.id.toString())
+
+            if (!response.isSuccessful) {
+                return Result.failure(
+                    Exception(ErrorParser.parseError(response.errorBody()) ?: "Unknown error")
+                )
+            }
+
+            val body = response.body() ?: return Result.failure(Exception("Empty response"))
+            Result.success(body)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun loadMapItems(): Result<List<LoadItemsResponse>> {
+        return try {
+            val response = itemService.loadItems(null)
 
             if (!response.isSuccessful) {
                 return Result.failure(

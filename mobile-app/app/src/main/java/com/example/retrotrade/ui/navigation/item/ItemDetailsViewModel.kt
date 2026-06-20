@@ -6,6 +6,7 @@ import android.util.Base64
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.example.retrotrade.repository.ItemRepository
+import com.example.retrotrade.repository.TradeRepository
 import com.example.retrotrade.ui.navigation.BaseViewModel
 import com.example.retrotrade.ui.navigation.GenericUiState
 import com.example.retrotrade.ui.navigation.Screen
@@ -22,6 +23,7 @@ class ItemDetailsViewModel(
 ) : BaseViewModel() {
 
     private val itemRepository = ItemRepository()
+    private val tradeRepository = TradeRepository()
 
     private val _uiState = MutableStateFlow(ItemDetailsUiState())
     val uiState: StateFlow<ItemDetailsUiState> = _uiState.asStateFlow()
@@ -45,6 +47,20 @@ class ItemDetailsViewModel(
     /* --------------------------- PUBLIC API --------------------------- */
     fun onGoBack() {
         popBackStack()
+    }
+
+    fun onSubmitOffer(amount: String, message: String?) {
+        viewModelScope.launch {
+            tradeRepository.createTrade(
+                _uiState.value.item?.id!!,
+                amount,
+                message
+            ).onSuccess {
+                _dataState.value = GenericUiState.Success
+            }.onFailure {
+                _dataState.value = GenericUiState.Error(it.message ?: "Failed to create trade")
+            }
+        }
     }
 
     fun resetDataState() {

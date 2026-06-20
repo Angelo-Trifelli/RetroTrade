@@ -62,6 +62,7 @@ fun TradesContent(
     uiState: TradesUiState = TradesUiState(),
     dataState: GenericUiState = GenericUiState.Idle,
     onTabSelected: (Int) -> Unit = {},
+    onOpenChat: (Trade) -> Unit = {},
     onRefresh: () -> Unit = {}
 ) {
     val isRefreshing = dataState is GenericUiState.Loading
@@ -98,7 +99,8 @@ fun TradesContent(
                 EmptyState()
             } else {
                 TradeList(
-                    trades = uiState.filteredTrades
+                    trades = uiState.filteredTrades,
+                    onOpenChat = onOpenChat
                 )
             }
 
@@ -185,24 +187,35 @@ private fun EmptyState() {
 
 // ─── Active Trades Tab ──────────────────────────────────────────────
 @Composable
-private fun TradeList(trades: List<Trade>) {
+private fun TradeList(
+    trades: List<Trade>,
+    onOpenChat: (Trade) -> Unit
+) {
     Column(
         modifier = Modifier.padding(horizontal = 24.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         trades.forEach { trade ->
-            TradeCard(trade)
+            TradeCard(
+                trade = trade,
+                onOpenChat = onOpenChat
+            )
         }
     }
 }
 
 @Composable
-private fun TradeCard(trade: Trade) {
+private fun TradeCard(
+    trade: Trade,
+    onOpenChat: (Trade) -> Unit = {}
+) {
     Card(
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable{ onOpenChat(trade) }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             // ── Status + time ────────────────────────────────
@@ -303,7 +316,7 @@ private fun StatusBadge(status: TradeStatus) {
     val (bgColor, textColor) = when (status) {
         TradeStatus.PENDING -> Color(0xFFFFF3E0) to Color(0xFFE65100)
         TradeStatus.ACCEPTED -> Color(0xFFE3F2FD) to Color(0xFF1565C0)
-        TradeStatus.COMPLETED -> Color(0xFFF3E5F5) to Color(0xFF7B1FA2)
+        TradeStatus.COMPLETED -> Color(0xFFF3E5F5) to Color(0xFF2E7D32)
         TradeStatus.REJECTED -> Color(0xFFFFEBEE) to Color(0xFFC62828)
     }
 

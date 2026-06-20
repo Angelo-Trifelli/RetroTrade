@@ -54,7 +54,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.retrotrade.ui.navigation.GenericUiState
@@ -66,11 +65,11 @@ import com.example.retrotrade.ui.theme.RetroTextSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Preview(showBackground = true)
 fun ItemDetailsContent(
     uiState: ItemDetailsUiState = ItemDetailsUiState(),
     dataState: GenericUiState = GenericUiState.Idle,
-    onGoBack: () -> Unit = {}
+    onGoBack: () -> Unit = {},
+    onSubmitOffer: (amount: String, message: String?) -> Unit
 ) {
 
     var showOfferSheet by remember { mutableStateOf(false) }
@@ -189,7 +188,7 @@ fun ItemDetailsContent(
                 onDismiss = { showOfferSheet = false },
                 onSubmitOffer = { amount, message ->
                     showOfferSheet = false
-                    // TODO: forward to ViewModel
+                    onSubmitOffer(amount, message)
                 }
             )
         }
@@ -327,7 +326,7 @@ fun MakeOfferBottomSheet(
                             amountError = false
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Offer Amount") },
+                        label = { Text("Offer Amount", color = Color.White) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         singleLine = true,
                         interactionSource = amountFocused,
@@ -335,7 +334,9 @@ fun MakeOfferBottomSheet(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
                             focusedLabelColor = MaterialTheme.colorScheme.primary,
-                            cursorColor = MaterialTheme.colorScheme.primary
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
                         )
                     )
                 }
@@ -383,14 +384,15 @@ fun MakeOfferBottomSheet(
                         .fillMaxWidth()
                         .heightIn(min = 80.dp),
                     label = { Text("Add a note to the seller…", fontSize = 15.sp, color = Color.White, lineHeight = 22.sp) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     interactionSource = messageFocused,
                     shape = MaterialTheme.shapes.medium,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
                         focusedLabelColor = MaterialTheme.colorScheme.primary,
-                        cursorColor = MaterialTheme.colorScheme.primary
+                        cursorColor = MaterialTheme.colorScheme.primary,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
                     )
                 )
             }

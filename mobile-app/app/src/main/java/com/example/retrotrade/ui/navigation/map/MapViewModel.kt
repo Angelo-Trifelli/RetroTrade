@@ -102,7 +102,7 @@ class MapViewModel(
     private fun loadItems() {
         _dataState.value = GenericUiState.Loading
         viewModelScope.launch {
-            itemRepository.loadItems()
+            itemRepository.loadMapItems()
                 .onSuccess { items ->
                     _uiState.value = _uiState.value.copy(items = items)
                     _dataState.value = GenericUiState.Idle
