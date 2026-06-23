@@ -25,13 +25,23 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.pow
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 class MapViewModel(
     application: Application
 ) : AndroidViewModel(application) {
 
     private val itemRepository = ItemRepository()
+
+    // Items after category + radius filtering, before search query is applied
+    private var radiusAndCategoryFilteredItems: List<LoadItemsResponse> = emptyList()
 
     private val _uiState = MutableStateFlow(MapUiState())
     val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
@@ -67,7 +77,8 @@ class MapViewModel(
     }
 
     fun onSearchQueryChanged(query: String) {
-        _uiState.value = _uiState.value.copy(searchQuery = query)
+        _uiState.update { it.copy(searchQuery = query) }
+        applySearchFilter()
     }
 
     fun onItemCategoryChange(category: ItemCategory) {
@@ -79,7 +90,36 @@ class MapViewModel(
     }
 
     fun onFilterWindowClosed() {
+        val state = _uiState.value
+        val origin = _userLocation.value
 
+        radiusAndCategoryFilteredItems  = state.items.filter { item ->
+            val matchesCategory = state.selectedCategory == ItemCategory.ALL ||
+                    item.category == state.selectedCategory
+
+            val matchesRadius = origin == null || haversineDistanceKm(
+                origin.latitude, origin.longitude,
+                item.latitude, item.longitude
+            ) <= state.radiusKm
+
+            matchesCategory && matchesRadius
+        }
+
+        applySearchFilter()
+    }
+
+    private fun applySearchFilter() {
+        val query = _uiState.value.searchQuery.trim()
+
+        val result = if (query.isEmpty()) {
+            radiusAndCategoryFilteredItems
+        } else {
+            radiusAndCategoryFilteredItems.filter { item ->
+                item.name.contains(query, ignoreCase = true)
+            }
+        }
+
+        _uiState.update { it.copy(filteredItems = result) }
     }
 
     fun onClusterClick(items: List<LoadItemsResponse>) {
@@ -106,6 +146,25 @@ class MapViewModel(
                 .onSuccess { items ->
                     _uiState.value = _uiState.value.copy(items = items)
                     _dataState.value = GenericUiState.Idle
+
+                    viewModelScope.launch {
+                        val origin = _userLocation.filterNotNull().first()
+                        val state = _uiState.value
+
+                        radiusAndCategoryFilteredItems  = state.items.filter { item ->
+                            val matchesCategory = state.selectedCategory == ItemCategory.ALL ||
+                                    item.category == state.selectedCategory
+
+                            val matchesRadius = haversineDistanceKm(
+                                origin.latitude, origin.longitude,
+                                item.latitude, item.longitude
+                            ) <= state.radiusKm
+
+                            matchesCategory && matchesRadius
+                        }
+
+                        applySearchFilter()
+                    }
                 }
                 .onFailure {
                     _dataState.value = GenericUiState.Error(it.message ?: "Failed to load items")
@@ -115,6 +174,22 @@ class MapViewModel(
 
     fun resetDataState() {
         _dataState.value = GenericUiState.Idle
+    }
+
+    private fun haversineDistanceKm(
+        lat1: Double, lon1: Double,
+        lat2: Double, lon2: Double
+    ): Double {
+        val earthRadiusKm = 6371.0
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+
+        val a = sin(dLat / 2).pow(2) +
+                cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) *
+                sin(dLon / 2).pow(2)
+        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+        return earthRadiusKm * c
     }
 
     @SuppressLint("MissingPermission")

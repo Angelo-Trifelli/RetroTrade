@@ -1,4 +1,5 @@
 import logging
+import os
 
 from config import database_connection, firebase_config
 from rest import AuthPublisher, UserPublisher, ItemPublisher, TradePublisher
@@ -38,7 +39,7 @@ if __name__ == "__main__":
     logging.info("Starting server...")
 
     try:
-        app.run(host='0.0.0.0', port=8080, debug=True)
+        app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
     except Exception as e:
         logging.error(f"Error: {e}")
         logging.info("Server stopped.")

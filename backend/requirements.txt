@@ -1,6 +1,7 @@
 Flask
 flask-cors
 Flask-SQLAlchemy
+gunicorn
 cloud-sql-python-connector[pymysql]
 python-dotenv
 firebase-admin

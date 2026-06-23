@@ -123,6 +123,7 @@ fun MapContent(
             }
             if (userLocation != null) {
                 locationCentered = true
+                onFilterWindowClosed()
             }
         }
     }
@@ -144,7 +145,7 @@ fun MapContent(
             }
 
             Clustering(
-                items = uiState.items.map { it.toClusterItem() },
+                items = uiState.filteredItems.map { it.toClusterItem() },
                 onClusterClick = { cluster ->
                     onClusterClick(cluster.items.map { it.item })
                     false

@@ -30,7 +30,7 @@ def get_connection():
             os.environ["REMOTE_INSTANCE_CONNECTION_NAME"],
             "pymysql",
             user=get_db_user(),
-            enable_iam_auth=True,
+            password=get_db_password(),
             db=get_db_name()
         )
     else:   #Local env

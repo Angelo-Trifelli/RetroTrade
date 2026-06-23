@@ -29,6 +29,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,7 +45,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
+import com.example.retrotrade.ui.screens.scan.CameraPreviewScreen
 import com.example.retrotrade.ui.theme.BackgroundColor
 import com.example.retrotrade.ui.theme.RetroTextPrimary
 import com.example.retrotrade.ui.theme.RetroTextSecondary
@@ -54,21 +61,15 @@ fun PhotoCaptureSection(
     onClearPhoto: () -> Unit = {}
 ) {
     val context = LocalContext.current
-
-    val cameraLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.TakePicturePreview()
-    ) { bitmap ->
-        onPhotoCaptured(bitmap)
-    }
+    var showCustomCamera by remember { mutableStateOf(false) }
 
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) {
-            cameraLauncher.launch(null)
+            showCustomCamera = true
         }
     }
-
 
     Card(
         shape = RoundedCornerShape(20.dp),
@@ -120,7 +121,7 @@ fun PhotoCaptureSection(
                         .background(BackgroundColor)
                         .clickable {
                             if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                                cameraLauncher.launch(null)
+                                showCustomCamera = true
                             } else {
                                 cameraPermissionLauncher.launch(
                                     Manifest.permission.CAMERA
@@ -163,6 +164,23 @@ fun PhotoCaptureSection(
                     )
                 }
             }
+        }
+    }
+
+    if (showCustomCamera) {
+        Dialog(
+            onDismissRequest = { showCustomCamera = false },
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false
+            )
+        ) {
+            CameraPreviewScreen(
+                onPhotoCaptured = { bitmap ->
+                    onPhotoCaptured(bitmap)
+                    showCustomCamera = false
+                },
+                onClose = { showCustomCamera = false }
+            )
         }
     }
 }

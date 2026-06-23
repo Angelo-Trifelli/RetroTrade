@@ -9,5 +9,6 @@ data class MapUiState(
     val selectedCategory: ItemCategory = ItemCategory.ALL,
     val radiusKm: Float = 10f,
     val items: List<LoadItemsResponse> = emptyList(),
+    val filteredItems: List<LoadItemsResponse> = emptyList(),
     val selectedClusterItems: List<LoadItemsResponse>  = emptyList()
 )
