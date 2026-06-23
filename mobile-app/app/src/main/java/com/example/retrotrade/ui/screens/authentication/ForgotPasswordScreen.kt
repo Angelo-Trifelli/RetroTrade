@@ -12,21 +12,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.SwapHorizontalCircle
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -42,39 +37,29 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.retrotrade.R
 import com.example.retrotrade.ui.components.common.AppErrorDialog
-import com.example.retrotrade.ui.navigation.GenericUiState
-import com.example.retrotrade.ui.navigation.authentication.LoginViewModel
+import com.example.retrotrade.ui.navigation.authentication.ForgotPasswordUiState
+import com.example.retrotrade.ui.navigation.authentication.ForgotPasswordViewModel
 import com.example.retrotrade.ui.theme.RetroIcon
 
 @Preview(showBackground = true)
 @Composable
-fun LoginScreen(
-    viewModel: LoginViewModel = viewModel()
+fun ForgotPasswordScreen(
+    viewModel: ForgotPasswordViewModel = viewModel()
 ) {
     val focusManager = LocalFocusManager.current
     val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(Unit) {
-        viewModel.checkExistingSession()
-    }
-
-    //Form variables
     var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
+    var showSuccessMessage by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -87,15 +72,18 @@ fun LoginScreen(
             }
     ) {
         LaunchedEffect(uiState) {
-            if (uiState is GenericUiState.Success) {
-                viewModel.onLoginCompleted()
+            when (uiState) {
+                is ForgotPasswordUiState.Success -> {
+                    showSuccessMessage = true
+                }
+                else -> {}
             }
         }
 
-        if (uiState is GenericUiState.Error) {
+        if (uiState is ForgotPasswordUiState.Error) {
             AppErrorDialog(
-                title = "Login Error",
-                message = (uiState as GenericUiState.Error).message,
+                title = "Reset Password Error",
+                message = (uiState as ForgotPasswordUiState.Error).message,
                 onDismiss = { viewModel.resetState() }
             )
         }
@@ -118,7 +106,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = stringResource(R.string.app_name),
+                text = "Reset Password",
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.onBackground,
@@ -126,106 +114,77 @@ fun LoginScreen(
             )
 
             Text(
-                text = "Welcome back, trader.",
+                text = "Enter your email to receive a reset link.",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 32.dp)
             )
 
-            // Login Card Form
+            // Forgot Password Card Form
             Card(
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                shape = RoundedCornerShape(24.dp),
+                shape = MaterialTheme.shapes.large,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
                     modifier = Modifier.padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    if (showSuccessMessage) {
+                        Text(
+                            text = "A password reset link has been sent to your email address. Please check your inbox and follow the instructions to reset your password.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFF27AE60),
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp)
+                        )
+                    }
+
                     OutlinedTextField(
                         value = email,
                         onValueChange = {
                             email = it
+                            if (showSuccessMessage) {
+                                showSuccessMessage = false
+                                viewModel.resetState()
+                            }
                         },
                         label = { Text("Email Address") },
-                        leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = RetroIcon ) },
+                        leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = RetroIcon) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium,
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Email,
-                            imeAction = ImeAction.Next
-                        ),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            focusedLabelColor = MaterialTheme.colorScheme.primary,
-                            cursorColor = MaterialTheme.colorScheme.primary
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = {
-                            password = it
-                        },
-                        label = { Text("Password") },
-                        leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = RetroIcon) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium,
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password,
                             imeAction = ImeAction.Done
                         ),
-                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                Icon(
-                                    imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                    contentDescription = null,
-                                    tint = RetroIcon
-                                )
-                            }
-                        },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
                             focusedLabelColor = MaterialTheme.colorScheme.primary,
                             cursorColor = MaterialTheme.colorScheme.primary
                         )
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "Forgot Password?",
-                        color = Color(0xFF2980B9),
-                        fontWeight = FontWeight.SemiBold,
-                        textAlign = TextAlign.End,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { viewModel.onForgotPasswordClicked() }
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Button(
-                        onClick = { viewModel.onLogin(email, password) },
+                        onClick = { viewModel.sendPasswordResetEmail(email) },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
                             disabledContainerColor = Color(0xFFBDC3C7)
                         ),
-                        enabled = uiState !is GenericUiState.Loading &&
-                                email.isNotBlank() &&
-                                password.isNotBlank(),
+                        enabled = uiState !is ForgotPasswordUiState.Loading &&
+                                email.isNotBlank(),
                         shape = MaterialTheme.shapes.medium,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp)
                     ) {
-                        if (uiState is GenericUiState.Loading) {
+                        if (uiState is ForgotPasswordUiState.Loading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(24.dp),
                                 strokeWidth = 2.dp,
@@ -233,7 +192,7 @@ fun LoginScreen(
                             )
                         } else {
                             Text(
-                                "LOGIN",
+                                "SEND RESET LINK",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 1.sp
@@ -247,16 +206,16 @@ fun LoginScreen(
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "Don't have an account? ",
+                    text = "Remember your password? ",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = "Register here",
+                    text = "Login here",
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.clickable { viewModel.onRegisterClicked() }
+                    modifier = Modifier.clickable { viewModel.onBackToLogin() }
                 )
             }
         }

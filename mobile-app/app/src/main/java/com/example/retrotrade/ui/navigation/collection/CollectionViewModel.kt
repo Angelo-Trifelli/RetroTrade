@@ -32,6 +32,10 @@ class CollectionViewModel : BaseViewModel() {
     }
 
     /* --------------------------- PUBLIC API --------------------------- */
+    fun onRefresh() {
+        loadCollectionData()
+    }
+
     fun onFilterSelected(filter: CollectionFilter) {
         _uiState.value = _uiState.value.copy(selectedFilter = filter)
     }

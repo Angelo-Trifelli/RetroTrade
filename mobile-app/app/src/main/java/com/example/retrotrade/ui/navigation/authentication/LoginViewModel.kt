@@ -51,6 +51,10 @@ class LoginViewModel : BaseViewModel() {
         navigate(Screen.Register.route)
     }
 
+    fun onForgotPasswordClicked() {
+        navigate(Screen.ForgotPassword.route)
+    }
+
     fun onLogin(email: String, password: String) {
         _uiState.value = GenericUiState.Loading
 

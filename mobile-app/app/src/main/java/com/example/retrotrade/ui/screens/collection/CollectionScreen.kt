@@ -26,6 +26,7 @@ fun CollectionScreen(
     CollectionContent(
         uiState = uiState,
         dataState = dataState,
+        onRefresh = { viewModel.onRefresh() },
         onFilterSelected = { viewModel.onFilterSelected(it) },
         onSearchQueryChanged = { viewModel.onSearchQueryChanged(it) },
         onItemSelected = { viewModel.onItemSelected(it) }

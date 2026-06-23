@@ -13,8 +13,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,74 +35,85 @@ import com.example.retrotrade.ui.theme.RetroIcon
 import com.example.retrotrade.ui.theme.RetroTextPrimary
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview(showBackground = true)
 fun CollectionContent(
     modifier: Modifier = Modifier,
     uiState: CollectionUiState = CollectionUiState(),
     dataState: GenericUiState = GenericUiState.Idle,
+    onRefresh: () -> Unit = {},
     onFilterSelected: (CollectionFilter) -> Unit = {},
     onSearchQueryChanged: (String) -> Unit = {},
     onItemSelected: (String) -> Unit = {}
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+
+    val isRefreshing = dataState is GenericUiState.Loading
+
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
+        modifier = modifier.fillMaxSize()
     ) {
-        // ── Header ──────────────────────────────────────────
-        AppHeader(
-            title = "My Collection",
-            subtitle = "${uiState.items.size} items listed",
-            icon = Icons.Default.Inventory2
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // ── Search bar ──────────────────────────────────────
-        SearchBar(
-            query = uiState.searchQuery,
-            onQueryChanged = onSearchQueryChanged,
-            placeholder = "Search your items..."
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (dataState is GenericUiState.Loading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    strokeWidth = 2.dp,
-                    color = Color.Black
-                )
-            }
-        } else {
-            // ── Filter chips ────────────────────────────────────
-            FilterChipsRow(
-                selectedFilter = uiState.selectedFilter,
-                onFilterSelected = onFilterSelected,
-                items = uiState.items
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
+            // ── Header ──────────────────────────────────────────
+            AppHeader(
+                title = "My Collection",
+                subtitle = "${uiState.items.size} items listed",
+                icon = Icons.Default.Inventory2
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // ── Items list ──────────────────────────────────────
-            if (uiState.filteredItems.isEmpty()) {
-                EmptyState()
-            } else {
-                ItemList(
-                    items = uiState.filteredItems,
-                    onItemSelected = { onItemSelected(it.id) }
-                )
-            }
+            // ── Search bar ──────────────────────────────────────
+            SearchBar(
+                query = uiState.searchQuery,
+                onQueryChanged = onSearchQueryChanged,
+                placeholder = "Search your items..."
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
-        }
 
+            if (dataState is GenericUiState.Loading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp,
+                        color = Color.Black
+                    )
+                }
+            } else {
+                // ── Filter chips ────────────────────────────────────
+                FilterChipsRow(
+                    selectedFilter = uiState.selectedFilter,
+                    onFilterSelected = onFilterSelected,
+                    items = uiState.items
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // ── Items list ──────────────────────────────────────
+                if (uiState.filteredItems.isEmpty()) {
+                    EmptyState()
+                } else {
+                    ItemList(
+                        items = uiState.filteredItems,
+                        onItemSelected = { onItemSelected(it.id) }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+        }
     }
 }
 

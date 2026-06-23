@@ -14,6 +14,7 @@ import com.example.retrotrade.ui.navigation.slideInFromLeft
 import com.example.retrotrade.ui.navigation.slideInFromRight
 import com.example.retrotrade.ui.navigation.slideOutToLeft
 import com.example.retrotrade.ui.navigation.slideOutToRight
+import com.example.retrotrade.ui.screens.authentication.ForgotPasswordScreen
 import com.example.retrotrade.ui.screens.authentication.LoginScreen
 import com.example.retrotrade.ui.screens.authentication.RegisterScreen
 
@@ -44,6 +45,16 @@ fun NavGraphBuilder.authNavGraph(
             val registerModel: RegisterViewModel = viewModel()
             ObserveNavigation(registerModel, navController)
             RegisterScreen(registerModel)
+        }
+
+        composable(
+            route = Screen.ForgotPassword.route,
+            enterTransition = { slideInFromRight() },
+            exitTransition = { slideOutToRight() }
+        ) {
+            val forgotPasswordModel: ForgotPasswordViewModel = viewModel()
+            ObserveNavigation(forgotPasswordModel, navController)
+            ForgotPasswordScreen(forgotPasswordModel)
         }
     }
 }
