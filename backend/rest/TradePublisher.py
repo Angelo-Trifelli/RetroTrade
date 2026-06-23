@@ -97,10 +97,11 @@ def create_trade():
     firebase_uid = g.firebase_user['uid']
     data = request.get_json()
 
-    item_id = data.get('itemId')
-    
     if not data:
         return ResponseBuilder.create_response("Missing data", 400, True)
+
+    item_id = data.get('itemId')
+    message = data.get('message')
     
     existing_trade = Trade.query.filter(
         Trade.buyer_id == firebase_uid,
@@ -124,10 +125,22 @@ def create_trade():
         buyer_id = firebase_uid
     )
 
-    if item.status == "CREATED":
+    if item.status == "ACTIVE":
         item.status = "PENDING"
 
+
     db.session.add(new_trade)
+    db.session.flush()
+
+    if message and message.strip():
+        new_message = ChatMessage(
+            created_at = datetime.now(tz=ZoneInfo("Europe/Rome")),
+            text = message,
+            trade_id = new_trade.id,
+            sender_id = firebase_uid
+        )
+        db.session.add(new_message)
+
     db.session.commit()
 
     return ResponseBuilder.create_response(" ", 201, False)
@@ -322,6 +335,19 @@ def reject_trade(id):
 
     trade.status = "REJECTED"
     trade.updated_at = datetime.now(tz=ZoneInfo("Europe/Rome"))
+
+    other_active_trades = db.session.query(Trade).filter(
+        Trade.item_id == trade.item_id,
+        Trade.id != trade.id,
+        Trade.status.in_(("PENDING", "ACCEPTED"))
+    ).first()
+
+    if other_active_trades is None:
+        item = db.session.query(Item).filter(Item.id == trade.item_id).first()
+        if item is not None:
+            item.status = "ACTIVE"
+
+
     db.session.commit()
 
     return ResponseBuilder.create_response(" ", 200, False)
@@ -379,6 +405,16 @@ def complete_trade(id):
     trade.status     = "COMPLETED"
     trade.updated_at = datetime.now(tz=ZoneInfo("Europe/Rome"))
     item.status = "SOLD"
+
+    competing_trades = db.session.query(Trade).filter(
+        Trade.item_id == item.id,
+        Trade.id != trade.id,
+        Trade.status.in_(("PENDING", "ACCEPTED"))
+    ).all()
+
+    for competing_trade in competing_trades:
+        competing_trade.status = "REJECTED"
+        competing_trade.updated_at = datetime.now(tz=ZoneInfo("Europe/Rome"))
 
     db.session.commit()
 
